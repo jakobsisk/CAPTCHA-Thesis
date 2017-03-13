@@ -24,7 +24,9 @@
 
     <nav> <!-- Expanding -->
       <ul>
-        <!-- js -->
+        <li>start_page</li>
+        <li>baseline</li>
+        <li>new_captcha</li>
       </ul>
     </nav>
   </header>

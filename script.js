@@ -1,31 +1,8 @@
-console.log('Script loaded.');
 
 var attempts = 0;
 var successes = 0;
-var path = window.location.pathname;
-console.log(path); 
 
-$.ajax({
-  type: 'POST',
-  url: 'index.php',
-  data:
-  {
-    action: encodeURI(action),
-    query: encodeURI(query),
-    startDate: encodeURI(startDate),
-    endDate: encodeURI(endDate)
-  },
-  success: returnedBookings,
-  error: errormsg,
-  dataType: 'json'
-});
-
-
-elems = document.getElementsByTagName('h3');
-
-for (var i = elems.length; i--;) {
-  elems[i].innerHTML = '';
-}
+refreshPage();
 
 // ----------------------------------------------- //
 // Event listeners //
@@ -33,7 +10,21 @@ for (var i = elems.length; i--;) {
 var elems = document.getElementsByTagName('h3');
 
 for (var i = elems.length; i--;) {
-  elems[i].addEventListener('click', pageNav, false);
+  elems[i].addEventListener('click', toggleNav, false);
+}
+
+var nav = document.getElementsByTagName('nav')[0];
+elems = nav.getElementsByTagName('li');
+
+for (var i = elems.length; i--;) {
+  elems[i].addEventListener('click', function(event) 
+  {
+    var page = event.target.innerHTML;
+
+    location.hash = page;
+
+    refreshPage();
+  }, false);
 }
 
 var el = document.getElementById('input_submit');
@@ -44,20 +35,57 @@ console.log('Listeners added.');
 // /Event listeners //
 // ----------------------------------------------- //
 
-function pageNav(event) {
+function refreshPage() 
+{
+  if (location.hash == '') {
+    location.hash = 'start_page';
+  }
+
+  if (location.hash === '#start_page') {
+    console.log('Loading start_page');
+    elems = document.getElementsByTagName('h3');
+
+    for (var i = elems.length; i--;) {
+      elems[i].innerHTML = 'start_page';
+    }
+  }
+  else if (location.hash === '#baseline') {
+    console.log('Loading baseline');
+    elems = document.getElementsByTagName('h3');
+
+    for (var i = elems.length; i--;) {
+      elems[i].innerHTML = 'baseline';
+    }
+  }
+  else if (location.hash === '#new_captcha') {
+    console.log('Loading new_captcha');
+    elems = document.getElementsByTagName('h3');
+
+    for (var i = elems.length; i--;) {
+      elems[i].innerHTML = 'new_captcha';
+    }
+  }
+}
+
+function toggleNav(event) 
+{
   var el = event.target.nextElementSibling;
 
   while (el.nodeName != 'NAV') {
     el = el.nextElementSibling;
   }
 
-  if (el.style.height == '0px') {
+  if (el.style.height == '0px' || el.style.height == '') {
+    // Show nav
     var lis = el.getElementsByTagName('li');
 
-    el.style.height = (lis.length * 60) + 'px';
+    el.style.height = (lis.length * 32) + 'px';
+    console.log('Showing navigation.');
   }
   else {
+    // Hide nav
     el.style.height = '0';
+    console.log('Hiding navigation.');
   }
 }
 
