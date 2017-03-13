@@ -22,7 +22,7 @@
     <h2>The robustness of a new non-visible CAPTCHA</h2>
     <h3>error<!-- js --></h3>
 
-    <nav> <!-- Expanding -->
+    <nav id="nav_main"> <!-- Expanding -->
       <ul>
         <li>start_page</li>
         <li>baseline</li>
@@ -70,7 +70,7 @@
     Created by Jakob Sisk
   </footer>
 
-
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
   <script src="script.js"></script>
 
 </body>

@@ -4,88 +4,56 @@ var successes = 0;
 
 refreshPage();
 
-// ----------------------------------------------- //
-// Event listeners //
+function refreshPage() 
+{
+  // ----------------------------------------------- //
+  // Event listeners //
 
-var elems = document.getElementsByTagName('h3');
+  var h3s = $('h3');
+  var lis = $('li','#nav_main');
+  var submit_button = $('#input_submit');
 
-for (var i = elems.length; i--;) {
-  elems[i].addEventListener('click', toggleNav, false);
-}
+  h3s.on('click', toggleNav);
 
-var nav = document.getElementsByTagName('nav')[0];
-elems = nav.getElementsByTagName('li');
-
-for (var i = elems.length; i--;) {
-  elems[i].addEventListener('click', function(event) 
+  lis.on('click', function() 
   {
-    var page = event.target.innerHTML;
+    var page = $(this).text();
 
     location.hash = page;
 
     refreshPage();
-  }, false);
-}
+    toggleNav();
+  });
 
-var el = document.getElementById('input_submit');
-el.addEventListener('click', submitForm, false);
+  submit_button.on('click', submitForm);
 
-console.log('Listeners added.');
+  console.log('Listeners added.');
 
-// /Event listeners //
-// ----------------------------------------------- //
+  // /Event listeners //
+  // ----------------------------------------------- //
 
-function refreshPage() 
-{
   if (location.hash == '') {
     location.hash = 'start_page';
   }
 
-  if (location.hash === '#start_page') {
-    console.log('Loading start_page');
-    elems = document.getElementsByTagName('h3');
-
-    for (var i = elems.length; i--;) {
-      elems[i].innerHTML = 'start_page';
-    }
-  }
-  else if (location.hash === '#baseline') {
-    console.log('Loading baseline');
-    elems = document.getElementsByTagName('h3');
-
-    for (var i = elems.length; i--;) {
-      elems[i].innerHTML = 'baseline';
-    }
-  }
-  else if (location.hash === '#new_captcha') {
-    console.log('Loading new_captcha');
-    elems = document.getElementsByTagName('h3');
-
-    for (var i = elems.length; i--;) {
-      elems[i].innerHTML = 'new_captcha';
-    }
-  }
+  var page = location.hash.substring(1);
+  console.log('LOADING:');
+  console.log('  ' + page);
+  h3s.text(page);
 }
 
-function toggleNav(event) 
+function toggleNav() 
 {
-  var el = event.target.nextElementSibling;
+  var nav = $('#nav_main');
+  var lis = $('li', '#nav_main');
 
-  while (el.nodeName != 'NAV') {
-    el = el.nextElementSibling;
-  }
-
-  if (el.style.height == '0px' || el.style.height == '') {
+  if (nav.css('height') == '0px') {
     // Show nav
-    var lis = el.getElementsByTagName('li');
-
-    el.style.height = (lis.length * 32) + 'px';
-    console.log('Showing navigation.');
+    nav.css('height', (lis.length * 32) + 'px');
   }
   else {
     // Hide nav
-    el.style.height = '0';
-    console.log('Hiding navigation.');
+    nav.css('height', 0);
   }
 }
 
@@ -110,11 +78,11 @@ function submitForm()
 function validateForm() 
 {
   var validate = false;
-  var formItems = document.getElementsByClassName('form_item');
+  var formItems = $('.form_item');
   var formItemsValid = 0;
 
   for (var i = formItems.length; i--;) {
-    inputs = formItems[i].getElementsByTagName('input');
+    var inputs = $('input', formItems[i]);
     var inputValid = false;
 
     for (var j = inputs.length; j--;) {
