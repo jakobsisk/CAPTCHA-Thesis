@@ -1,17 +1,26 @@
 
-var attempts = 0;
-var successes = 0;
-
 refreshPage();
 
 function refreshPage() 
 {
+  var attempts = 0;
+  var successes = 0;
+  var timePageLoad = new Date();
+  var timeFormStart;
+
   // ----------------------------------------------- //
   // Event listeners //
 
   var h3s = $('h3');
   var lis = $('li','#nav_main');
-  var submit_button = $('#input_submit');
+  var submitButton = $('#input_submit');
+  var nameInput = $('#input_name');
+
+  // Remove all old listeners (to avoid overlapp)
+  h3s.off();
+  lis.off();
+  submitButton.off();
+  nameInput.off();
 
   h3s.on('click', toggleNav);
 
@@ -25,9 +34,12 @@ function refreshPage()
     toggleNav();
   });
 
-  submit_button.on('click', submitForm);
+  submitButton.on('click', submitForm);
 
-  console.log('Listeners added.');
+  nameInput.focus(function() 
+  {
+    timeFormStart = new Date();
+  });
 
   // /Event listeners //
   // ----------------------------------------------- //
