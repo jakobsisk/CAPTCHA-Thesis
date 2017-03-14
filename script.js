@@ -1,5 +1,5 @@
 
-var attempts, successes, timePageLoad, timeFormStart;
+var attempts, successes, timePageLoad, timeFormStart, timeFormEnd, timeForm;
 
 refreshPage();
 
@@ -8,21 +8,32 @@ function refreshPage()
   attempts = 0;
   successes = 0;
   timePageLoad = new Date();
-  timeFormStart;
-
-  // ----------------------------------------------- //
-  // Event listeners //
 
   var h3s = $('h3');
   var lis = $('li','#nav_main');
   var submitButton = $('#input_submit');
   var nameInput = $('#input_name');
+  var textInputs = $('.input_text');
+  
+  if (location.hash == '') {
+    location.hash = 'start_page';
+  }
+
+  var page = location.hash.substring(1);
+  h3s.text(page);
+
+  console.log('LOADING:');
+  console.log('  ' + page);
+
+  // ----------------------------------------------- //
+  // Event listeners //
 
   // Remove all old listeners (to avoid overlap)
   h3s.off();
   lis.off();
   submitButton.off();
   nameInput.off();
+  textInputs.off();
 
   h3s.on('click', toggleNav);
 
@@ -38,28 +49,27 @@ function refreshPage()
 
   submitButton.on('click', submitForm);
 
-  // /Event listeners //
-  // ----------------------------------------------- //
-
-  if (location.hash == '') {
-    location.hash = 'start_page';
-  }
-
-  var page = location.hash.substring(1);
-  h3s.text(page);
-
-  console.log('LOADING:');
-  console.log('  ' + page);
-
-  if (page === 'new_captcha') {
+  // --- New CAPTCHA --- //
+  
+  if (page === 'new_captcha') { 
     nameInput.focus(function() 
     {
-      timeFormStart = new Date();
-
       console.log('ACTION:');
       console.log('  Focused name input.')
+
+      timeFormStart = new Date();
+    });
+
+    submitButton.on('click', function() 
+    {
+      timeFormEnd = new Date();
+      timeForm = timeFormEnd - timeFormStart;
+      console.log(timeForm + 'ms');
     });
   }
+
+  // /Event listeners //
+  // ----------------------------------------------- //
 }
 
 function toggleNav() 

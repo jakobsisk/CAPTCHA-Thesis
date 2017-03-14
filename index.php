@@ -34,23 +34,23 @@
   <form>
     <div class="form_item">
       <label for="input_name">Name </label>
-      <input type="text" name="name" placeholder="John Doe" id="input_name">
+      <input type="text" name="name" placeholder="John Doe" class="input_text" id="input_name">
     </div>
     
     <div class="form_item">
       <label for="input_email">Email </label>
-      <input type="email" name="email" placeholder="johndoe@email.com" id="i
+      <input type="email" name="email" placeholder="johndoe@email.com" class="input_text" id="i
     nput_email">
     </div>
 
     <div class="form_item">
       <label for="input_pswd">Password </label>
-      <input type="password" name="pswd" placeholder="Password" id="input_pswd">
+      <input type="password" name="pswd" placeholder="Password" class="input_text" id="input_pswd">
     </div>
 
     <div class="form_item">
       <label for="input_tel">Telephone </label>
-      <input type="tel" name="tel" placeholder="+46 70 444 55 66" id="input_tel">
+      <input type="tel" name="tel" placeholder="+46 70 444 55 66" class="input_text" id="input_tel">
     </div>
 
     <div class="form_item">
@@ -71,7 +71,7 @@
   </footer>
 
   <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
-  <script src="js/script.js"></script>
+  <script src="script.js"></script>
 
 </body>
 </html>
