@@ -128,6 +128,8 @@ function refreshPage()
     });
   }
 
+  // --- /New CAPTCHA --- //
+
   // /Event listeners //
   // ----------------------------------------------- //
 }
@@ -165,27 +167,32 @@ function submitForm()
   console.log('ACTION:'); 
   console.log('  Activated submit button.');
 
-  if (validateForm()) {
+  if (checkSuccess()) {
     successes++;
-    console.log('Form is valid.');
+    console.log('  Completed form.');
   }
   else {
-    console.log('Form is not valid.');
+    console.log('  Failed to complete form.');
   }
   attempts++;
   console.log('STATUS:');
   console.log('  Attemps - ' + attempts);
   console.log('  Successes - ' + successes);
+  console.log('  Failures - ' + (attempts - successes));
 }
 
-function validateForm() 
+function checkSuccess() 
 {
-  var validate = false;
+  var success = false;
+
+  // Validate form
+  var formValid = false;
   var formItems = $('.form_item');
   var formItemsValid = 0;
 
-  for (var i = formItems.length; i--;) {
-    var inputs = $('input', formItems[i]);
+  formItems.each(function(i, e) 
+  {
+    var inputs = $('input', e);
     var inputValid = false;
 
     for (var j = inputs.length; j--;) {
@@ -201,10 +208,17 @@ function validateForm()
     if (inputValid) {
       formItemsValid++;
     }
-  }
+  });
 
-  if (formItemsValid === formItems.length) {
-    validate = true;
-  }
-  return validate;
+  formValid = (formItemsValid === formItems.length) ? true : false;
+
+  // --- New CAPTCHA --- //
+
+  
+
+  // --- /New CAPTCHA --- //
+
+  success = (formValid && userRating > 50) ? true : false;
+
+  return success;
 }

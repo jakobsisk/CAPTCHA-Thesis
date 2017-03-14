@@ -20,7 +20,7 @@
   <header>
     <h1>Workshop</h1>
     <h2>The robustness of a new non-visible CAPTCHA</h2>
-    <h3>error<!-- js --></h3>
+    <h3>loading<!-- js --></h3>
 
     <nav id="nav_main"> <!-- Expanding -->
       <ul>
