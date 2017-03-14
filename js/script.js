@@ -18,7 +18,7 @@ function refreshPage()
   var submitButton = $('#input_submit');
   var nameInput = $('#input_name');
 
-  // Remove all old listeners (to avoid overlapp)
+  // Remove all old listeners (to avoid overlap)
   h3s.off();
   lis.off();
   submitButton.off();
@@ -38,13 +38,6 @@ function refreshPage()
 
   submitButton.on('click', submitForm);
 
-  nameInput.focus(function() 
-  {
-    timeFormStart = new Date();
-    console.log('ACTION:')
-    console.log('  Focused name input.')
-  });
-
   // /Event listeners //
   // ----------------------------------------------- //
 
@@ -53,17 +46,20 @@ function refreshPage()
   }
 
   var page = location.hash.substring(1);
-  console.log('LOADING:');
-  console.log('  ' + page);
   h3s.text(page);
 
-  if (page === 'new_captcha')
-  $.getScript("js/new_captcha.js", function(){
+  console.log('LOADING:');
+  console.log('  ' + page);
 
-   console.log("LOADED:");
-   console.log('  new_captcha.js');
+  if (page === 'new_captcha') {
+    nameInput.focus(function() 
+    {
+      timeFormStart = new Date();
 
-  });
+      console.log('ACTION:');
+      console.log('  Focused name input.')
+    });
+  }
 }
 
 function toggleNav() 
