@@ -50,9 +50,10 @@ function refreshPage()
   submitButton.on('click', submitForm);
 
   // --- New CAPTCHA --- //
-  
+
+  // Measure time spent on entire form
   if (page === 'new_captcha') { 
-    nameInput.focus(function() 
+    nameInput.on('focus', function() 
     {
       console.log('ACTION:');
       console.log('  Focused name input.')
@@ -64,7 +65,30 @@ function refreshPage()
     {
       timeFormEnd = new Date();
       timeForm = timeFormEnd - timeFormStart;
-      console.log(timeForm + 'ms');
+
+      console.log('DATA:');
+      console.log('  Form time - ' + timeForm + 'ms');
+    });
+
+    // Measure time spent on each text input
+    textInputs.each(function(i, e) 
+    {
+      var timeInputStart;
+      var timeInputEnd;
+      var timeInput;
+
+      $(e).on('focus', function() 
+      {
+        timeInputStart = new Date();
+      });
+      $(e).blur(function() 
+      {
+        timeInputEnd = new Date();
+        timeInput = timeInputEnd - timeInputStart;
+
+        console.log('DATA:');
+        console.log('  Input "' + $(e).attr('name') + '" time - ' + timeInput + 'ms');
+      });
     });
   }
 
