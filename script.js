@@ -1,10 +1,26 @@
 
-var attempts, successes, timePageLoad, timeFormStart, timeFormEnd, timeForm;
+/*  User rating - value from 1-100 - probability of user being bot/human
+    0 - high probability user is bot
+    50 - uncertain
+    100 - low probability user is a bot
+*/
+var userRating;
+
+var attempts;
+var successes; 
+
+var timePageLoad; 
+var timeFormStart; 
+var timeFormEnd; 
+var timeForm;
 
 refreshPage();
 
 function refreshPage() 
 {
+  // Start with uncertain user rating
+  userRating = 50; 
+
   attempts = 0;
   successes = 0;
   timePageLoad = new Date();
@@ -81,13 +97,33 @@ function refreshPage()
       {
         timeInputStart = new Date();
       });
-      $(e).blur(function() 
+      $(e).on('blur', function() 
       {
         timeInputEnd = new Date();
         timeInput = timeInputEnd - timeInputStart;
 
         console.log('DATA:');
         console.log('  Input "' + $(e).attr('name') + '" time - ' + timeInput + 'ms');
+
+        var ratingChange = 0;
+        if ($(e).val() != 'undefined' && $(e).val() != '') {
+          // If user finishes input to quickly
+          if (timeInput < 1000) {
+            ratingChange = -5;
+          }
+          // User finished input slowly
+          else {
+            ratingChange = 5;
+          }
+        }
+        // If input is finished empty
+        else if (timeInput > 1000) {
+          ratingChange = 10;
+        }
+        modRating(ratingChange);
+
+        console.log('User data:');
+        console.log('  Probability rating - ' + userRating);
       });
     });
   }
@@ -108,6 +144,19 @@ function toggleNav()
   else {
     // Hide nav
     nav.css('height', 0);
+  }
+}
+
+function modRating(val) 
+{
+  userRating += val;
+
+  // Keep rating between 0-100
+  if (userRating > 100) {
+    userRating = 100;
+  }
+  else if (userRating < 0) {
+    userRating = 0;
   }
 }
 
