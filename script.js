@@ -45,6 +45,7 @@ function refreshPage()
   // Event listeners //
 
   // Remove all old listeners (to avoid overlap)
+  $(document).off();
   h3s.off();
   lis.off();
   submitButton.off();
@@ -68,6 +69,7 @@ function refreshPage()
   // --- New CAPTCHA --- //
 
   // Measure time spent on entire form
+
   if (page === 'new_captcha') { 
     nameInput.on('focus', function() 
     {
@@ -86,7 +88,9 @@ function refreshPage()
       console.log('  Form time - ' + timeForm + 'ms');
     });
 
+
     // Measure time spent on each text input
+
     textInputs.each(function(i, e) 
     {
       var timeInputStart;
@@ -127,6 +131,43 @@ function refreshPage()
       });
     });
   }
+
+
+  // Mouse movement analysis
+
+  var i = 0;
+  var xArr = new Array();
+  var yArr = new Array();
+
+  $(document).on('mousemove', function(event)
+  {
+    if ((i + 1) % 10 === 0) {
+      xArr[i] = event.pageX;
+      yArr[i] = event.pageY;
+
+      console.log(((i + 1) / 10) + ' ' + event.pageX + ' ' + event.pageY);
+
+      if (i > 0 && (i + 1 % 100) === 0) {
+        console.log(i.length);
+        for (j = 0; j < i.length / 10; j += 10) {
+          console.log('awdawdawdawdawd');
+          var diff = new Array();
+          diff[j] = xArr[j + 1] - xArr[j];
+
+          // Get AVG
+          var sum = 0;
+          for (k = 0; diff.length; k++) {
+            sum += diff[k];
+          }
+          var mean = sum / diff.length;
+
+          console.log('X - Mean diff = ' + mean);
+        }
+      }
+    }
+
+    i = (i >= 100) ? 0 : i + 1;
+  });
 
   // --- /New CAPTCHA --- //
 
