@@ -138,35 +138,58 @@ function refreshPage()
   var i = 0;
   var xArr = new Array();
   var yArr = new Array();
+  var diff = new Array();
 
   $(document).on('mousemove', function(event)
   {
+    // Handle every 10th mouse event (minimize performance impact)
+
     if ((i + 1) % 10 === 0) {
-      xArr[i] = event.pageX;
-      yArr[i] = event.pageY;
+      xArr[(i + 1) / 10] = event.pageX;
+      yArr[(i + 1) / 10] = event.pageY;
 
-      console.log(((i + 1) / 10) + ' ' + event.pageX + ' ' + event.pageY);
+      console.log(((i + 1 ) / 10) + ' ' + event.pageX + ' ' + event.pageY);
 
-      if (i > 0 && (i + 1 % 100) === 0) {
-        console.log(i.length);
-        for (j = 0; j < i.length / 10; j += 10) {
-          console.log('awdawdawdawdawd');
-          var diff = new Array();
-          diff[j] = xArr[j + 1] - xArr[j];
+      if (i > 0 && ((i + 1) % 100) === 0) {
 
-          // Get AVG
-          var sum = 0;
-          for (k = 0; diff.length; k++) {
-            sum += diff[k];
-          }
-          var mean = sum / diff.length;
+        // Get mean difference
+        // Low mean difference = arithmetic progression = bot-like behaviour
 
-          console.log('X - Mean diff = ' + mean);
+        // X mean difference
+        for (j = 1; j < (i + 1) / 10; j++) {
+          diff.push(xArr[j + 1] - xArr[j]);
         }
+
+        var sum = 0;
+        for (k = 0; k < diff.length; k++) {
+          sum += diff[k];
+        }
+        var mean = sum / diff.length;
+
+        console.log('X - Mean diff = ' + mean);
+
+        // Y mean difference
+        for (j = 1; j < (i + 1) / 10; j++) {
+          diff.push(yArr[j + 1] - yArr[j]);
+        }
+
+        var sum = 0;
+        for (k = 0; k < diff.length; k++) {
+          sum += diff[k];
+        }
+        var mean = sum / diff.length;
+
+        console.log('Y - Mean diff = ' + mean);
       }
     }
 
-    i = (i >= 100) ? 0 : i + 1;
+    if (i >= 99) {
+      diff = new Array();
+      i = 0;
+    }
+    else {
+      i++;
+    }
   });
 
   // --- /New CAPTCHA --- //
