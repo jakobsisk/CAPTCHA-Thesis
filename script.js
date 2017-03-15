@@ -4,6 +4,12 @@
     50 - uncertain
     100 - low probability user is a bot
 */
+
+// Descides how arithmetic progression is defined on mouse movement
+const ARIT_LIMIT = 2;
+// Defines how much arithmetic progression effects the user rating
+const ARIT_STRNGTH = 1;
+
 var userRating;
 
 var attempts;
@@ -66,16 +72,15 @@ function refreshPage()
 
   submitButton.on('click', submitForm);
 
+
   // --- New CAPTCHA --- //
 
-  // Measure time spent on entire form
-
   if (page === 'new_captcha') { 
+
+    // Measure time spent on entire form
+
     nameInput.on('focus', function() 
     {
-      console.log('ACTION:');
-      console.log('  Focused name input.')
-
       timeFormStart = new Date();
     });
 
@@ -125,9 +130,6 @@ function refreshPage()
           ratingChange = 10;
         }
         modRating(ratingChange);
-
-        console.log('User data:');
-        console.log('  Probability rating - ' + userRating);
       });
     });
   }
@@ -136,50 +138,87 @@ function refreshPage()
   // Mouse movement analysis
 
   var i = 0;
-  var xArr = new Array();
-  var yArr = new Array();
-  var diff = new Array();
+  var arrX = new Array();
+  var arrY = new Array();
 
   $(document).on('mousemove', function(event)
   {
     // Handle every 10th mouse event (minimize performance impact)
 
     if ((i + 1) % 10 === 0) {
-      xArr[(i + 1) / 10] = event.pageX;
-      yArr[(i + 1) / 10] = event.pageY;
+      arrX[(i + 1) / 10] = (-event.pageX > 0) ? -event.pageX : event.pageX;
+      arrY[(i + 1) / 10] = (-event.pageY > 0) ? -event.pageY : event.pageY;
 
-      console.log(((i + 1 ) / 10) + ' ' + event.pageX + ' ' + event.pageY);
+      var diffs = new Array();
+      var diffsDiffs = new Array();
 
       if (i > 0 && ((i + 1) % 100) === 0) {
 
-        // Get mean difference
-        // Low mean difference = arithmetic progression = bot-like behaviour
+        // Get mean difference of mouse movement progression 
+        //    or difference of difference of mouse coordinates
+        // Low difference = arithmetic progression = bot-like behaviour
+
+        var subtr;
+        var diff;
+        var meanX;
+        var meanY;
+        var mean;
 
         // X mean difference
+
         for (j = 1; j < (i + 1) / 10; j++) {
-          diff.push(xArr[j + 1] - xArr[j]);
+          subtr = arrX[j + 1] - arrX[j];
+          diff = (-subtr > 0) ? -subtr : subtr;
+          diffs.push(diff);
+        }
+
+        for (j = 0; j < diffs.length - 1; j++) {
+          subtr = diffs[j + 1] - diffs[j];
+          diffDiff = (-subtr > 0) ? -subtr : subtr;
+          diffsDiffs.push(diffDiff);
         }
 
         var sum = 0;
-        for (k = 0; k < diff.length; k++) {
-          sum += diff[k];
-        }
-        var mean = sum / diff.length;
 
-        console.log('X - Mean diff = ' + mean);
+        for (j = 0; j < diffsDiffs.length; j++) {
+          sum += diffsDiffs[j];
+        }
+
+        meanX = sum / diffsDiffs.length;
+        meanX = +(Math.round(meanX + "e+2")  + "e-2");
+        meanX = (-meanX > 0) ? -meanX: meanX;
 
         // Y mean difference
+
         for (j = 1; j < (i + 1) / 10; j++) {
-          diff.push(yArr[j + 1] - yArr[j]);
+          subtr = arrY[j + 1] - arrY[j];
+          diff = (-subtr > 0) ? -subtr : subtr;
+          diffs.push(diff);
+        }
+
+        for (j = 0; j < diffs.length - 1; j++) {
+          subtr = diffs[j + 1] - diffs[j];
+          diffDiff = (-subtr > 0) ? -subtr : subtr;
+          diffsDiffs.push(diffDiff);
         }
 
         var sum = 0;
-        for (k = 0; k < diff.length; k++) {
-          sum += diff[k];
+        
+        for (j = 0; j < diffsDiffs.length; j++) {
+          sum += diffsDiffs[j];
         }
-        var mean = sum / diff.length;
 
-        console.log('Y - Mean diff = ' + mean);
+        meanY = sum / diffsDiffs.length;
+        meanY = +(Math.round(meanY + "e+2")  + "e-2");
+        meanY = (-meanY > 0) ? -meanY: meanY;
+
+        mean = (meanX + meanY) / 2;
+
+        console.log('DATA:');
+        console.log('  Mouse movement - ' + mean);
+
+        ratingChange = (mean < ARIT_LIMIT) ? -ARIT_STRNGTH : ARIT_STRNGTH;
+        modRating(ratingChange);
       }
     }
 
@@ -224,6 +263,9 @@ function modRating(val)
   else if (userRating < 0) {
     userRating = 0;
   }
+
+  console.log('User data:');
+  console.log('  Probability rating - ' + userRating);
 }
 
 function submitForm() 
