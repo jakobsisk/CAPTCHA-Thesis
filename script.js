@@ -5,16 +5,6 @@
     100 - low probability user is a bot
 */
 
-// Descides how arithmetic progression is defined on mouse movement
-const ARIT_LIMIT = 2;
-// Defines how much arithmetic progression effects the user rating
-const ARIT_STRNGTH = 2;
-
-// Descides how geometric progression is defined on mouse movement
-const GEO_LIMIT = 0.0010;
-// Defines how much geometric progression effects the user rating
-const GEO_STRNGTH = 5;
-
 var userRating;
 
 var attempts;
@@ -110,15 +100,20 @@ function refreshPage()
 
     $(document).on('mousemove', function(event)
     {
+
       // Handle every 10th mouse event (minimize performance impact)
-
       if ((i + 1) % 10 === 0) {
-        arrX[(i + 1) / 10] = (-event.pageX > 0) ? -event.pageX : event.pageX;
-        arrY[(i + 1) / 10] = (-event.pageY > 0) ? -event.pageY : event.pageY;
 
-        // Analayze if mouse movements follow arithmetic progression
-        aritProgrCheck(i, arrX, arrY);
-        geoProgrCheck(i, arrX, arrY);
+        // Check for patterns in mouse movements
+
+        arrX[((i + 1) / 10) - 1] = (-event.pageX > 0) ? -event.pageX : event.pageX;
+        arrY[((i + 1) / 10) - 1] = (-event.pageY > 0) ? -event.pageY : event.pageY;
+
+        // Analyze and compare last 10 recorded mousemove events
+        if (i > 0 && ((i + 1) % 100) === 0) {
+          patternCheck(arrX);
+          patternCheck(arrY);
+        }
       }
 
       if (i >= 99) {
@@ -189,144 +184,40 @@ function inputTimer(i, e)
   });
 }
 
-function aritProgrCheck(i, arrX, arrY) 
+function patternCheck(arr) 
 {
-  var diffs = new Array();
-  var diffsDiffs = new Array();
+  var patterns = {};
+  var sum;
+  var mean;
 
-  if (i > 0 && ((i + 1) % 100) === 0) {
+  var operators = {
+    '-': function (c1, c2) { return makePositive(c1 - c2)},
+    '/': function (c1, c2) { return c1 / c2},
+    'sqrt': function (c1, c2) { return Math.sqrt(c2)}
+  };
 
-    // Get mean difference of mouse movement progression 
-    //    or difference of difference of mouse coordinates
-    // Low difference = arithmetic progression = bot-like behaviour
+  $.each(operators, function(key, op) 
+  {
+    pattern = new Array();
 
-    var subtr;
-    var diff;
-    var diffsDiff;
-    var meanX;
-    var meanY;
-    var mean;
-    var sum = 0;
-
-    // X mean difference
-
-    for (j = 1; j < (i + 1) / 10; j++) {
-      subtr = arrX[j + 1] - arrX[j];
-      diff = (-subtr > 0) ? -subtr : subtr;
-      diffs.push(diff);
-    }
-
-    for (j = 0; j < diffs.length - 1; j++) {
-      subtr = diffs[j + 1] - diffs[j];
-      diffsDiff = (-subtr > 0) ? -subtr : subtr;
-      diffsDiffs.push(diffsDiff);
-    }
-
-    for (j = 0; j < diffsDiffs.length; j++) {
-      sum += diffsDiffs[j];
-    }
-
-    meanX = sum / diffsDiffs.length;
-    meanX = (-meanX > 0) ? -meanX: meanX;
-
-    // Y mean difference
-
-    for (j = 1; j < (i + 1) / 10; j++) {
-      subtr = arrY[j + 1] - arrY[j];
-      diff = (-subtr > 0) ? -subtr : subtr;
-      diffs.push(diff);
-    }
-
-    for (j = 0; j < diffs.length - 1; j++) {
-      subtr = diffs[j + 1] - diffs[j];
-      diffsDiff = (-subtr > 0) ? -subtr : subtr;
-      diffsDiffs.push(diffsDiff);
+    for (j = 0; j < arr.length - 1; j++) {
+      pattern.push(op(arr[j + 1], arr[j]));
     }
 
     sum = 0;
-    
-    for (j = 0; j < diffsDiffs.length; j++) {
-      sum += diffsDiffs[j];
+
+    for (j = 0; j < pattern.length - 1; j++) {
+      sum += makePositive(pattern[j + 1] - pattern[j]);
     }
 
-    meanY = sum / diffsDiffs.length;
-    meanY = (-meanY > 0) ? -meanY: meanY;
-
-    mean = (meanX + meanY) / 2;
-    mean = Math.round(mean * 100) / 100; // Limit to 2 decimals
-
-    console.log('DATA:');
-    console.log('  Mouse movement difference - ' + mean);
-
-    ratingChange = (mean < ARIT_LIMIT) ? -ARIT_STRNGTH : 1;
-    modRating(ratingChange);
-  }
+    mean = sum / pattern.length;
+    console.log(key + ' ' + mean);
+  });
 }
 
-function geoProgrCheck(i, arrX, arrY) 
+function makePositive(num) 
 {
-  var quots = new Array();
-  var quotsDiffs = new Array();
-
-  if (i > 0 && ((i + 1) % 100) === 0) {
-
-    // Get mean quotient of mouse movement progression 
-    //    or difference of quotient of mouse coordinates
-    // Low quotient = geometric progression = bot-like behaviour
-
-    var quot;
-    var quotsDiff;
-    var meanX;
-    var meanY;
-    var mean;
-    var sum = 0;
-
-    // X mean quotient
-
-    for (j = 1; j < (i + 1) / 10; j++) {
-      quot = arrX[j + 1] / arrX[j];
-      quots.push(quot);
-    }
-
-    for (j = 0; j < quots.length - 1; j++) {
-      quotsDiff = quots[j + 1] - quots[j];
-      quotsDiffs.push(quotsDiff);
-    }
-
-    for (j = 0; j < quotsDiffs.length; j++) {
-      sum += quotsDiffs[j];
-    }
-
-    meanX = sum / quotsDiffs.length;
-
-    // Y mean quotient
-
-    for (j = 1; j < (i + 1) / 10; j++) {
-      quot = arrY[j + 1] / arrY[j];
-      quots.push(quot);
-    }
-
-    for (j = 0; j < quots.length - 1; j++) {
-      quotsDiff = quots[j + 1] - quots[j];
-      quotsDiffs.push(quotsDiff);
-    }
-
-    for (j = 0; j < quotsDiffs.length; j++) {
-      sum += quotsDiffs[j];
-    }
-
-    meanY = sum / quotsDiffs.length;
-
-    mean = (meanX + meanY) / 2;
-    mean = Math.round(mean * 10000) / 10000; // Limit to 2 decimals
-    mean = (-mean > 0) ? -mean : mean;
-
-    console.log('DATA:');
-    console.log('  Mouse movement quotient - ' + mean);
-
-    ratingChange = (mean < GEO_LIMIT) ? -GEO_STRNGTH : 1;
-    modRating(ratingChange);
-  }
+  return (-num > 0) ? -num : num;
 }
 
 function modRating(val) 
@@ -405,3 +296,17 @@ function checkSuccess()
 
   return success;
 }
+
+// Control functions //
+// ----------------------------------------------- //
+
+function testPatternCheck()
+{
+  patternCheck([1, 2, 3, 4, 5, 6]); // Test arithmetic progression
+  patternCheck([1, 2, 4, 8, 16, 32]); // Test geometric progrssion
+  patternCheck([1, 4, 9, 16, 25, 36]); // Test power progression
+}
+
+// /Control functions //
+// ----------------------------------------------- //
+
