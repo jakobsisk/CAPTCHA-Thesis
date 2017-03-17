@@ -8,30 +8,29 @@
 var userRating;
 
 var attempts;
-var successes; 
+var successes;
 
-var timePageLoad; 
-var timeFormStart; 
-var timeFormEnd; 
+var timePageLoad;
+var timeFormStart;
+var timeFormEnd;
 var timeForm;
 
 refreshPage();
 
-function refreshPage() 
-{
+function refreshPage() {
   // Start with uncertain user rating
-  userRating = 50; 
+  userRating = 50;
 
   attempts = 0;
   successes = 0;
   timePageLoad = new Date();
 
   var h3s = $('h3');
-  var lis = $('li','#nav_main');
+  var lis = $('li', '#nav_main');
   var submitButton = $('#input_submit');
   var nameInput = $('#input_name');
   var textInputs = $('.input_text');
-  
+
   if (location.hash == '') {
     location.hash = 'start_page';
   }
@@ -55,8 +54,7 @@ function refreshPage()
 
   h3s.on('click', toggleNav);
 
-  lis.on('click', function() 
-  {
+  lis.on('click', function () {
     var page = $(this).text();
 
     location.hash = page;
@@ -70,17 +68,15 @@ function refreshPage()
 
   // --- New CAPTCHA --- //
 
-  if (page === 'new_captcha') { 
+  if (page === 'new_captcha') {
 
     // Measure time spent on entire form
 
-    nameInput.on('focus', function() 
-    {
+    nameInput.on('focus', function () {
       timeFormStart = new Date();
     });
 
-    submitButton.on('click', function() 
-    {
+    submitButton.on('click', function () {
       timeFormEnd = new Date();
       timeForm = timeFormEnd - timeFormStart;
 
@@ -95,19 +91,22 @@ function refreshPage()
     // Mouse movement analysis
 
     var i = 0;
+    var posX = 0;
+    var posY = 0;
     var arrX = new Array();
     var arrY = new Array();
 
-    $(document).on('mousemove', function(event)
-    {
+    $(document).on('mousemove', function (event) {
 
       // Handle every 10th mouse event (minimize performance impact)
       if ((i + 1) % 10 === 0) {
 
         // Check for patterns in mouse movements
 
-        arrX[((i + 1) / 10) - 1] = (-event.pageX > 0) ? -event.pageX : event.pageX;
-        arrY[((i + 1) / 10) - 1] = (-event.pageY > 0) ? -event.pageY : event.pageY;
+        x = Math.round((-event.pageX > 0) ? -event.pageX : event.pageX); 
+        y = Math.round((-event.pageY > 0) ? -event.pageY : event.pageY);
+        arrX[((i + 1) / 10) - 1] = x;
+        arrY[((i + 1) / 10) - 1] = y;
 
         // Analyze and compare last 10 recorded mousemove events
         if (i > 0 && ((i + 1) % 100) === 0) {
@@ -132,8 +131,7 @@ function refreshPage()
   // ----------------------------------------------- //
 }
 
-function toggleNav() 
-{
+function toggleNav() {
   var nav = $('#nav_main');
   var lis = $('li', '#nav_main');
 
@@ -147,18 +145,15 @@ function toggleNav()
   }
 }
 
-function inputTimer(i, e)
-{
+function inputTimer(i, e) {
   var timeInputStart;
   var timeInputEnd;
   var timeInput;
 
-  $(e).on('focus', function() 
-  {
+  $(e).on('focus', function () {
     timeInputStart = new Date();
   });
-  $(e).on('blur', function() 
-  {
+  $(e).on('blur', function () {
     timeInputEnd = new Date();
     timeInput = timeInputEnd - timeInputStart;
 
@@ -184,44 +179,80 @@ function inputTimer(i, e)
   });
 }
 
-function patternCheck(arr) 
-{
-  var patterns = {};
-  var sum;
-  var mean;
+function patternCheck(arr, depth) {
+  if (typeof depth == 'undefined') {
+    depth = 0;
+  }
+ 
+  console.log('Pattern check.');
+  console.log('Array: ' + arr);
+  console.log('  DEPTH | OPERATION');
+
+  var pattern = false;  
+  var relation;
+  var anomalies = 0;
+  var anomaly;
 
   var operators = {
-    '-': function (c1, c2) { return makePositive(c1 - c2)},
-    '/': function (c1, c2) { return c1 / c2},
-    'sqrt': function (c1, c2) { return Math.sqrt(c2)}
+    'differences' : function (c1, c2) { return makePositive(c1 - c2) },
+    'quotients' : function (c1, c2) { return c1 / c2 },
+    'square roots' : function (c1, c2) { return Math.sqrt(c2) }
   };
 
-  $.each(operators, function(key, op) 
-  {
-    pattern = new Array();
+  var i = 0;
+  
+  $.each(operators, function (key, op) {
+    if (depth === 0 || i <= depth) {
+      console.log('  ' + depth + '| Looking at ' + key + '.')
+      relation = new Array();
 
-    for (j = 0; j < arr.length - 1; j++) {
-      pattern.push(op(arr[j + 1], arr[j]));
+      for (j = 0; j < arr.length - 1; j++) {
+        relation.push(op(arr[j + 1], arr[j]));
+      }
+
+      anomalies = 0;
+
+      for (j = 0; j < relation.length - 1; j++) {
+        anomaly = (makePositive(relation[j + 1] - relation[j]) !== 0) ? 1 : 0;
+        anomalies += anomaly;
+      }
+
+      if (anomalies === 0) {
+        console.log('  Pattern found using ' + key + '.');
+        pattern = true;
+        return false; // Break loop
+      }
+      else if (anomalies > 0 && depth <= i && !pattern) {
+        console.log('  No pattern found yet. Going deeper...')
+        pattern = patternCheck(relation, (depth + 1));
+        return !pattern;
+      }
+    } 
+    else {
+      console.log('  No pattern found. Going back up.');
+      return false;
     }
 
-    sum = 0;
-
-    for (j = 0; j < pattern.length - 1; j++) {
-      sum += makePositive(pattern[j + 1] - pattern[j]);
-    }
-
-    mean = sum / pattern.length;
-    console.log(key + ' ' + mean);
+    i++;
   });
+
+  if (depth === 0 && pattern) {
+    console.log('Pattern check complete. Found pattern.');
+    console.log(' ');
+  }  
+  else if (depth === 0 & !pattern) {
+    console.log('Pattern check complete. Found no pattern.');
+    console.log(' ');
+  }  
+
+  return pattern;
 }
 
-function makePositive(num) 
-{
+function makePositive(num) {
   return (-num > 0) ? -num : num;
 }
 
-function modRating(val) 
-{
+function modRating(val) {
   userRating += val;
 
   // Keep rating between 0-100
@@ -236,9 +267,8 @@ function modRating(val)
   console.log('  Probability rating - ' + userRating);
 }
 
-function submitForm() 
-{
-  console.log('ACTION:'); 
+function submitForm() {
+  console.log('ACTION:');
   console.log('  Activated submit button.');
 
   if (checkSuccess()) {
@@ -255,8 +285,7 @@ function submitForm()
   console.log('  Failures - ' + (attempts - successes));
 }
 
-function checkSuccess() 
-{
+function checkSuccess() {
   var success = false;
 
   // Validate form
@@ -264,8 +293,7 @@ function checkSuccess()
   var formItems = $('.form_item');
   var formItemsValid = 0;
 
-  formItems.each(function(i, e) 
-  {
+  formItems.each(function (i, e) {
     var inputs = $('input', e);
     var inputValid = false;
 
@@ -288,7 +316,7 @@ function checkSuccess()
 
   // --- New CAPTCHA --- //
 
-  
+
 
   // --- /New CAPTCHA --- //
 
@@ -300,11 +328,10 @@ function checkSuccess()
 // Control functions //
 // ----------------------------------------------- //
 
-function testPatternCheck()
-{
+function testPatternCheck() {
   patternCheck([1, 2, 3, 4, 5, 6]); // Test arithmetic progression
-  patternCheck([1, 2, 4, 8, 16, 32]); // Test geometric progrssion
-  patternCheck([1, 4, 9, 16, 25, 36]); // Test power progression
+  patternCheck([4, 5, 7, 11, 19, 35]); // Test geometric progrssion
+  patternCheck([12, 29, 70, 147, 272, 457]); // Test power progression
 }
 
 // /Control functions //
