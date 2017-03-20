@@ -95,6 +95,7 @@ function refreshPage() {
     var posY = 0;
     var arrX = new Array();
     var arrY = new Array();
+    var pattern = false;
 
     $(document).on('mousemove', function (event) {
 
@@ -107,11 +108,11 @@ function refreshPage() {
         y = Math.round((-event.pageY > 0) ? -event.pageY : event.pageY);
         arrX[((i + 1) / 10) - 1] = x;
         arrY[((i + 1) / 10) - 1] = y;
-
+        
         // Analyze and compare last 10 recorded mousemove events
         if (i > 0 && ((i + 1) % 100) === 0) {
-          patternCheck(arrX);
-          patternCheck(arrY);
+          pattern = patternCheck(arrX);
+          pattern = patternCheck(arrY);
         }
       }
 
@@ -179,14 +180,13 @@ function inputTimer(i, e) {
   });
 }
 
-function patternCheck(arr, depth) {
+function patternCheck(arr, depth, parentI) {
   if (typeof depth == 'undefined') {
+    console.log('Pattern check.');
+    console.log('  DEPTH | OPERATION');
+
     depth = 0;
   }
- 
-  console.log('Pattern check.');
-  console.log('Array: ' + arr);
-  console.log('  DEPTH | OPERATION');
 
   var pattern = false;  
   var relation;
@@ -199,37 +199,43 @@ function patternCheck(arr, depth) {
     'square roots' : function (c1, c2) { return Math.sqrt(c2) }
   };
 
+  if (typeof parentI == 'undefined') {
+    parentI = Object.keys(operators).length + 1;
+  }
+
   var i = 0;
   
   $.each(operators, function (key, op) {
-    if (depth === 0 || i <= depth) {
-      console.log('  ' + depth + '| Looking at ' + key + '.')
-      relation = new Array();
+    console.log(depth + ' ' + i + ' ' + parentI);
+    console.log('  ' + depth + ' | Looking at ' + key + '.')
+    relation = new Array();
 
-      for (j = 0; j < arr.length - 1; j++) {
-        relation.push(op(arr[j + 1], arr[j]));
-      }
+    for (j = 0; j < arr.length - 1; j++) {
+      relation.push(op(arr[j + 1], arr[j]));
+    }
 
-      anomalies = 0;
+    anomalies = 0;
 
-      for (j = 0; j < relation.length - 1; j++) {
-        anomaly = (makePositive(relation[j + 1] - relation[j]) !== 0) ? 1 : 0;
-        anomalies += anomaly;
-      }
+    for (j = 0; j < relation.length - 1; j++) {
+      anomaly = (makePositive(relation[j + 1] - relation[j]) !== 0) ? 1 : 0;
+      anomalies += anomaly;
+    }
 
-      if (anomalies === 0) {
-        console.log('  Pattern found using ' + key + '.');
-        pattern = true;
-        return false; // Break loop
-      }
-      else if (anomalies > 0 && depth <= i && !pattern) {
-        console.log('  No pattern found yet. Going deeper...')
-        pattern = patternCheck(relation, (depth + 1));
-        return !pattern;
-      }
-    } 
-    else {
-      console.log('  No pattern found. Going back up.');
+    if (anomalies === 0) {
+      console.log('  ' + depth + ' | Pattern found using ' + key + '.');
+      pattern = true;
+      return false; // Break loop
+    }
+    else if (anomalies > 0 && depth <= parentI && !pattern) {
+      console.log('  ' + depth + ' | No pattern found yet. Going deeper...')
+      pattern = patternCheck(relation, (depth + 1), i);
+    }
+    else if (depth > (parentI + 1)) {
+      console.log('  ' + depth + ' | No pattern found. Going back up.');
+      return false; // Break loop
+    }
+
+    if (pattern) {
       return false;
     }
 
@@ -330,8 +336,8 @@ function checkSuccess() {
 
 function testPatternCheck() {
   patternCheck([1, 2, 3, 4, 5, 6]); // Test arithmetic progression
-  patternCheck([4, 5, 7, 11, 19, 35]); // Test geometric progrssion
-  patternCheck([12, 29, 70, 147, 272, 457]); // Test power progression
+  patternCheck([2, 3, 5, 9, 17, 33]); // Test geometric progrssion
+  patternCheck([1, 4, 9, 16, 25, 36]); // Test power progression
 }
 
 // /Control functions //
