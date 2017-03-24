@@ -5,6 +5,13 @@
     100 - low probability user is a bot
 */
 
+// Operators used to analyze relations between coordinates in mouse movements 
+const PATTERN_OPERATORS = {
+  'differences' : function (c1, c2) { return makePositive(c1 - c2) },
+  'quotients' : function (c1, c2) { return c1 / c2 },
+  'square roots' : function (c1, c2) { return Math.sqrt(c2) }
+};
+
 var userRating;
 
 var attempts;
@@ -111,8 +118,7 @@ function refreshPage() {
         
         // Analyze and compare last 10 recorded mousemove events
         if (i > 0 && ((i + 1) % 100) === 0) {
-          pattern = patternCheck(arrX);
-          pattern = patternCheck(arrY);
+          pattern = patternCheck(arrX, PATTERN_OPERATORS) || patternCheck(arrY, PATTERN_OPERATORS);
         }
       }
 
@@ -180,76 +186,67 @@ function inputTimer(i, e) {
   });
 }
 
-function patternCheck(arr, depth, parentI) {
+function patternCheck(arr, operators, depth) 
+{
+   var pattern = false;
+
+  // If no depth is passed set depth to 0
   if (typeof depth == 'undefined') {
-    console.log('Pattern check.');
-    console.log('  DEPTH | OPERATION');
+
+    // console.log('Pattern check.');
 
     depth = 0;
   }
 
-  var pattern = false;  
-  var relation;
-  var anomalies = 0;
-  var anomaly;
-
-  var operators = {
-    'differences' : function (c1, c2) { return makePositive(c1 - c2) },
-    'quotients' : function (c1, c2) { return c1 / c2 },
-    'square roots' : function (c1, c2) { return Math.sqrt(c2) }
-  };
-
-  if (typeof parentI == 'undefined') {
-    parentI = Object.keys(operators).length + 1;
-  }
-
-  var i = 0;
-  
   $.each(operators, function (key, op) {
-    console.log(depth + ' ' + i + ' ' + parentI);
-    console.log('  ' + depth + ' | Looking at ' + key + '.')
-    relation = new Array();
+    console.log('Analyzing mouse movement: ');
+    console.log('  Depth - ' + depth);
+    console.log('  Operation - ' + key);
+
+    // Relations (relative to operator) between numbers in array
+    var relation;
+    var relations = new Array();
+
+    // Anomaly: Difference between relations. 
+    // 0 = no difference = no anomaly = pattern
+    var anomaly = 0;
+    var anomalyTotal = 0;
+    var anomaliesMean = 0;
 
     for (j = 0; j < arr.length - 1; j++) {
-      relation.push(op(arr[j + 1], arr[j]));
+      relation = op(arr[j + 1], arr[j]);
+      relations.push(relation);
+
+      if (j > 0) {
+        anomaly = makePositive(relations[j] - relations[j - 1]);
+        anomalyTotal += anomaly;
+        
+        //console.log(anomalyTotal);
+      }
     }
 
-    anomalies = 0;
-
-    for (j = 0; j < relation.length - 1; j++) {
-      anomaly = (makePositive(relation[j + 1] - relation[j]) !== 0) ? 1 : 0;
-      anomalies += anomaly;
-    }
-
-    if (anomalies === 0) {
-      console.log('  ' + depth + ' | Pattern found using ' + key + '.');
+    if (anomalyTotal === 0) {
       pattern = true;
-      return false; // Break loop
     }
-    else if (anomalies > 0 && depth <= parentI && !pattern) {
-      console.log('  ' + depth + ' | No pattern found yet. Going deeper...')
-      pattern = patternCheck(relation, (depth + 1), i);
-    }
-    else if (depth > (parentI + 1)) {
-      console.log('  ' + depth + ' | No pattern found. Going back up.');
-      return false; // Break loop
+    else if (depth === 0) {
+      pattern = patternCheck(relations, operators, depth + 1);
     }
 
     if (pattern) {
       return false;
     }
-
-    i++;
   });
 
-  if (depth === 0 && pattern) {
-    console.log('Pattern check complete. Found pattern.');
-    console.log(' ');
-  }  
-  else if (depth === 0 & !pattern) {
-    console.log('Pattern check complete. Found no pattern.');
-    console.log(' ');
-  }  
+  if (depth === 0) {
+    if (pattern) {
+      console.log('Mouse movement:');
+      console.log('  Pattern found.');
+    }
+    else {
+      console.log('Mouse movement:');
+      console.log('  No pattern found.');
+    }
+  }
 
   return pattern;
 }
@@ -334,12 +331,9 @@ function checkSuccess() {
 // Control functions //
 // ----------------------------------------------- //
 
-function testPatternCheck() {
-  patternCheck([1, 2, 3, 4, 5, 6]); // Test arithmetic progression
-  patternCheck([2, 3, 5, 9, 17, 33]); // Test geometric progrssion
-  patternCheck([1, 4, 9, 16, 25, 36]); // Test power progression
+function testPatternCheck(arr) {
+  patternCheck(arr, PATTERN_OPERATORS); // Test arithmetic progression
 }
 
 // /Control functions //
 // ----------------------------------------------- //
-
