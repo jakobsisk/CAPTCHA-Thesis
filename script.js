@@ -12,10 +12,8 @@ const PATTERN_OPERATORS = {
   'square roots' : function (c1, c2) { return Math.sqrt(c2) }
 };
 
-var userRating;
-
-var attempts;
-var successes;
+var attempts = 0;
+var successes = 0;
 
 var timePageLoad;
 var timeFormStart;
@@ -25,11 +23,10 @@ var timeForm;
 refreshPage();
 
 function refreshPage() {
-  // Start with uncertain user rating
-  userRating = 50;
 
-  attempts = 0;
-  successes = 0;
+  // Reset form
+  $('form').trigger('reset');
+
   timePageLoad = new Date();
 
   var h3s = $('h3');
@@ -67,6 +64,7 @@ function refreshPage() {
     location.hash = page;
 
     refreshPage();
+    resetCounters();
     toggleNav();
   });
 
@@ -76,6 +74,21 @@ function refreshPage() {
   // --- New CAPTCHA --- //
 
   if (page === 'new_captcha') {
+
+    // Start with uncertain user rating
+    var ratingOp = 'reset';
+    var postData = {
+      'op': ratingOp
+    };
+
+    $.ajax({
+      url: "rating.php",
+      type: "post",
+      data: postData,
+      dataType: 'json',
+      success: ratingChangeSuccess,
+      error: ajaxFailure
+    });
 
     // Measure time spent on entire form
 
@@ -138,6 +151,12 @@ function refreshPage() {
   // ----------------------------------------------- //
 }
 
+function resetCounters() 
+{
+  attempts = 0;
+  successes = 0;
+}
+
 function toggleNav() {
   var nav = $('#nav_main');
   var lis = $('li', '#nav_main');
@@ -182,7 +201,21 @@ function inputTimer(i, e) {
     else if (timeInput > 1000) {
       ratingChange = 10;
     }
-    modRating(ratingChange);
+
+    var ratingOp = 'mod';
+    var postData = {
+      'op': ratingOp, 
+      'change': ratingChange
+    };
+
+    $.ajax({
+      url: "rating.php",
+      type: "post",
+      data: postData,
+      dataType: 'json',
+      success: ratingChangeSuccess,
+      error: ajaxFailure
+    });
   });
 }
 
@@ -199,9 +232,9 @@ function patternCheck(arr, operators, depth)
   }
 
   $.each(operators, function (key, op) {
-    console.log('Analyzing mouse movement: ');
-    console.log('  Depth - ' + depth);
-    console.log('  Operation - ' + key);
+    //console.log('Analyzing mouse movement: ');
+    //console.log('  Depth - ' + depth);
+    //console.log('  Operation - ' + key);
 
     // Relations (relative to operator) between numbers in array
     var relation;
@@ -210,8 +243,7 @@ function patternCheck(arr, operators, depth)
     // Anomaly: Difference between relations. 
     // 0 = no difference = no anomaly = pattern
     var anomaly = 0;
-    var anomalyTotal = 0;
-    var anomaliesMean = 0;
+    var anomaliesTotal = 0;
 
     for (j = 0; j < arr.length - 1; j++) {
       relation = op(arr[j + 1], arr[j]);
@@ -219,13 +251,13 @@ function patternCheck(arr, operators, depth)
 
       if (j > 0) {
         anomaly = makePositive(relations[j] - relations[j - 1]);
-        anomalyTotal += anomaly;
+        anomaliesTotal += anomaly;
         
         //console.log(anomalyTotal);
       }
     }
 
-    if (anomalyTotal === 0) {
+    if (anomaliesTotal === 0) {
       pattern = true;
     }
     else if (depth === 0) {
@@ -237,59 +269,111 @@ function patternCheck(arr, operators, depth)
     }
   });
 
+  var ratingChange = 0; 
+
   if (depth === 0) {
     if (pattern) {
       console.log('Mouse movement:');
       console.log('  Pattern found.');
+
+      ratingChange = -20;
     }
     else {
       console.log('Mouse movement:');
       console.log('  No pattern found.');
+
+      ratingChange = 1;
     }
+
+    var ratingOp = 'mod';
+    var postData = {
+      'op': ratingOp, 
+      'change': ratingChange
+    };
+
+     $.ajax({
+        url: "rating.php",
+        type: "post",
+        data: postData,
+        dataType: 'json',
+        success: ratingChangeSuccess,
+        error: ajaxFailure
+    });
   }
 
   return pattern;
 }
 
-function makePositive(num) {
+function makePositive(num) 
+{
   return (-num > 0) ? -num : num;
 }
 
-function modRating(val) {
-  userRating += val;
-
-  // Keep rating between 0-100
-  if (userRating > 100) {
-    userRating = 100;
-  }
-  else if (userRating < 0) {
-    userRating = 0;
-  }
-
-  console.log('User data:');
-  console.log('  Probability rating - ' + userRating);
-}
-
-function submitForm() {
+function submitForm() 
+{
   console.log('ACTION:');
   console.log('  Activated submit button.');
 
-  if (checkSuccess()) {
-    successes++;
-    console.log('  Completed form.');
+  var success;
+
+  if (location.hash == '#baseline') {
+    // Standard form check
+    success = formCheck();
+
+    if (success) {
+      successes++;
+      console.log('  Completed form.');
+    }
+    else {
+      console.log('  Failed to complete form.');
+    }
+
+    attempts++;
+
+    console.log('STATUS:');
+    console.log('  Attemps - ' + attempts);
+    console.log('  Successes - ' + successes);
+    console.log('  Failures - ' + (attempts - successes));
   }
-  else {
-    console.log('  Failed to complete form.');
+  else if (location.hash == '#new_captcha') // --- New CAPTCHA --- //
+  {
+    var rating; 
+
+    success = formCheck();
+
+    getRating().done(function(response)
+    {
+      if (!phpErrorCheck(response)) {
+        console.log('Rating check:');
+        rating = response['rating'];
+        console.log('  Rating - ' + rating);
+
+        success = success && ((rating > 50) ? true : false);
+      }
+
+      if (success) {
+      successes++;
+      console.log('  Completed form.');
+      }
+      else {
+        console.log('  Failed to complete form.');
+      }
+
+      attempts++;
+
+      console.log('STATUS:');
+      console.log('  Attemps - ' + attempts);
+      console.log('  Successes - ' + successes);
+      console.log('  Failures - ' + (attempts - successes));
+    });
   }
-  attempts++;
-  console.log('STATUS:');
-  console.log('  Attemps - ' + attempts);
-  console.log('  Successes - ' + successes);
-  console.log('  Failures - ' + (attempts - successes));
+
+  refreshPage();
 }
 
-function checkSuccess() {
-  var success = false;
+function formCheck() 
+{
+  console.log('Form check:');
 
   // Validate form
   var formValid = false;
@@ -315,25 +399,64 @@ function checkSuccess() {
     }
   });
 
+  console.log(formItemsValid + ' ' + formItems.length);
   formValid = (formItemsValid === formItems.length) ? true : false;
 
-  // --- New CAPTCHA --- //
-
-
-
-  // --- /New CAPTCHA --- //
-
-  success = (formValid && userRating > 50) ? true : false;
-
-  return success;
+  console.log('  Valid - ' + formValid);
+  return formValid;
 }
 
 // Control functions //
 // ----------------------------------------------- //
 
 function testPatternCheck(arr) {
-  patternCheck(arr, PATTERN_OPERATORS); // Test arithmetic progression
+  patternCheck(arr, PATTERN_OPERATORS);
 }
 
-// /Control functions //
+
+// AJAX functions //
 // ----------------------------------------------- //
+
+function getRating() {
+  var ratingOp = 'get';
+  var postData = {
+    'op': ratingOp
+  };
+
+  return $.ajax({
+    url: "rating.php",
+    type: "post",
+    data: postData,
+    dataType: 'json',
+    error: ajaxFailure
+  });
+}
+
+function ratingChangeSuccess(response)
+{
+  if (!phpErrorCheck(response)) {
+    console.log('Rating change: ');
+    console.log('  Rating - ' + response['rating']); 
+  }
+}
+
+function phpErrorCheck(response) 
+{
+  var error = false;
+
+  if (response['error'] != 'none') {
+    console.log('PHP error: ');
+    console.log('  ' + response['error']);
+
+    error = true;
+  }
+
+  return error;
+}
+
+function ajaxFailure(jqXHR, textStatus, errorThrown)
+{
+  console.log(jqXHR);
+  console.log(textStatus);
+  console.log(errorThrown);
+}

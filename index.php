@@ -16,7 +16,7 @@
 </head>
 
 <body>
- 
+
   <header>
     <h1>Workshop</h1>
     <h2>The robustness of a new non-visible CAPTCHA</h2>
