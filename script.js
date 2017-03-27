@@ -75,6 +75,8 @@ function refreshPage() {
 
   if (page === 'new_captcha') {
 
+    console.log('Rating change: ');
+    console.log('  Cause - Reset');
     // Start with uncertain user rating
     var ratingOp = 'reset';
     var postData = {
@@ -111,10 +113,14 @@ function refreshPage() {
     // Mouse movement analysis
 
     var i = 0;
-    var posX = 0;
-    var posY = 0;
-    var arrX = new Array();
-    var arrY = new Array();
+    var pos = {
+      x: 0,
+      y: 0
+    };
+    var posArr = {
+      x: [],
+      y: []
+    };
     var pattern = false;
 
     $(document).on('mousemove', function (event) {
@@ -124,19 +130,21 @@ function refreshPage() {
 
         // Check for patterns in mouse movements
 
-        x = Math.round((-event.pageX > 0) ? -event.pageX : event.pageX); 
-        y = Math.round((-event.pageY > 0) ? -event.pageY : event.pageY);
-        arrX[((i + 1) / 10) - 1] = x;
-        arrY[((i + 1) / 10) - 1] = y;
+        pos.x = Math.round((-event.pageX > 0) ? -event.pageX : event.pageX); 
+        pos.y = Math.round((-event.pageY > 0) ? -event.pageY : event.pageY);
+        posArr.x.push(pos.x);
+        posArr.y.push(pos.y);
         
         // Analyze and compare last 10 recorded mousemove events
         if (i > 0 && ((i + 1) % 100) === 0) {
-          pattern = patternCheck(arrX, PATTERN_OPERATORS) || patternCheck(arrY, PATTERN_OPERATORS);
+          console.log('Mouse movement:');
+          pattern = patternCheck('x', posArr.x, PATTERN_OPERATORS) || patternCheck('y', posArr.y, PATTERN_OPERATORS);
         }
       }
 
       if (i >= 99) {
-        diff = new Array();
+        posArr.x = [];
+        posArr.y = [];
         i = 0;
       }
       else {
@@ -202,6 +210,9 @@ function inputTimer(i, e) {
       ratingChange = 10;
     }
 
+    console.log('Rating change: ');
+    console.log('  Cause - input timer');
+
     var ratingOp = 'mod';
     var postData = {
       'op': ratingOp, 
@@ -219,9 +230,23 @@ function inputTimer(i, e) {
   });
 }
 
-function patternCheck(arr, operators, depth) 
+function patternCheck(arrName, arr, operators, depth) 
 {
-   var pattern = false;
+  console.log('  Pattern check ');
+  console.log('  Array - ' + arrName);
+
+  var pattern = false;
+  var random = false;
+  var status = '';
+
+  // Relations (relative to operator) between numbers in array
+  var relation;
+  var relations;
+
+  // Anomaly: Difference between relations. 
+  // 0 = no difference = no anomaly = pattern
+  var anomaly;
+  var anomaliesTotal;
 
   // If no depth is passed set depth to 0
   if (typeof depth == 'undefined') {
@@ -232,39 +257,47 @@ function patternCheck(arr, operators, depth)
   }
 
   $.each(operators, function (key, op) {
-    //console.log('Analyzing mouse movement: ');
-    //console.log('  Depth - ' + depth);
-    //console.log('  Operation - ' + key);
 
-    // Relations (relative to operator) between numbers in array
-    var relation;
-    var relations = new Array();
+    console.log('  Depth - ' + depth);
+    console.log('  Operation - ' + key);
 
-    // Anomaly: Difference between relations. 
-    // 0 = no difference = no anomaly = pattern
-    var anomaly = 0;
-    var anomaliesTotal = 0;
+    relation = 0;
+    relations = [];
 
-    for (j = 0; j < arr.length - 1; j++) {
-      relation = op(arr[j + 1], arr[j]);
+    anomaly = 0;
+    anomaliesTotal = 0;
+
+    for (i = 0; i < arr.length - 1; i++) {
+      relation = op(arr[i + 1], arr[i]);
       relations.push(relation);
 
-      if (j > 0) {
-        anomaly = makePositive(relations[j] - relations[j - 1]);
+      if (i > 0) {
+        anomaly = makePositive(relations[i] - relations[i - 1]);
         anomaliesTotal += anomaly;
-        
-        //console.log(anomalyTotal);
+      }
+    }
+    
+    // Look for randomized sequence
+    if (depth > 0 && key == 'differences' && arrName.substr(2) == 'differences') {
+      console.log(anomaliesTotal / (relations.length - 1));
+      if (Math.round(anomaliesTotal / (relations.length - 1)) > 100) {
+        random = true;
+
+        console.log('  Found likely random sequence.');
       }
     }
 
+    // If there is pattern or if numbers seem random
     if (anomaliesTotal === 0) {
       pattern = true;
+
+      console.log('Found pattern');
     }
-    else if (depth === 0) {
-      pattern = patternCheck(relations, operators, depth + 1);
+    else if (!random && depth === 0) {
+      pattern = patternCheck(arrName + '_' + key, relations, operators, depth + 1);
     }
 
-    if (pattern) {
+    if (pattern || random) {
       return false;
     }
   });
@@ -273,17 +306,17 @@ function patternCheck(arr, operators, depth)
 
   if (depth === 0) {
     if (pattern) {
-      console.log('Mouse movement:');
-      console.log('  Pattern found.');
-
       ratingChange = -20;
     }
+    else if (random) {
+      ratingChange = -10;
+    }
     else {
-      console.log('Mouse movement:');
-      console.log('  No pattern found.');
-
       ratingChange = 1;
     }
+
+    console.log('Rating change: ');
+    console.log('  Cause - pattern check.');
 
     var ratingOp = 'mod';
     var postData = {
@@ -301,7 +334,7 @@ function patternCheck(arr, operators, depth)
     });
   }
 
-  return pattern;
+  return pattern || random;
 }
 
 function makePositive(num) 
@@ -346,7 +379,7 @@ function submitForm()
       if (!phpErrorCheck(response)) {
         console.log('Rating check:');
         rating = response['rating'];
-        console.log('  Rating - ' + rating);
+        console.log('Rating: ' + rating);
 
         success = success && ((rating > 50) ? true : false);
       }
@@ -406,15 +439,15 @@ function formCheck()
   return formValid;
 }
 
-// Control functions //
+// Control //
 // ----------------------------------------------- //
 
 function testPatternCheck(arr) {
-  patternCheck(arr, PATTERN_OPERATORS);
+  patternCheck('test', arr, PATTERN_OPERATORS);
 }
 
 
-// AJAX functions //
+// AJAX //
 // ----------------------------------------------- //
 
 function getRating() {
@@ -435,8 +468,7 @@ function getRating() {
 function ratingChangeSuccess(response)
 {
   if (!phpErrorCheck(response)) {
-    console.log('Rating change: ');
-    console.log('  Rating - ' + response['rating']); 
+    console.log('Rating: ' + response['rating']); 
   }
 }
 

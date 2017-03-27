@@ -19,6 +19,13 @@
       $change = $_POST['change'];
 
       $_SESSION['rating'] = $_SESSION['rating'] + $change;
+
+      if ($_SESSION['rating'] > 100) {
+        $_SESSION['rating'] = 100;
+      }
+      else if ($_SESSION['rating'] < 0) {
+        $_SESSION['rating'] = 0;
+      }
     }
     else {
       $errorMsg = 'Change is not set.';
