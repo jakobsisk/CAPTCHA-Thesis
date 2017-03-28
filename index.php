@@ -66,6 +66,18 @@
     <button type="button" id="input_submit">Submit</button>
   </form>
 
+  <section> 
+    <div class="status_item" id="status_attempts">
+      Attempts: <span class="status_item_value" id="status_attempts_value">0</span>
+    </div>
+    <div class="status_item" id="status_successes">
+      Successes: <span class="status_item_value" id="status_successes_value">0</span>
+    </div>
+    <div class="status_item" id="status_failures">
+      Failures: <span class="status_item_value" id="status_failures_value">0</span>
+    </div>
+  </section>
+
   <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
   <script src="script.js"></script>
 

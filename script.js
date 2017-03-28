@@ -98,15 +98,6 @@ function refreshPage() {
       timeFormStart = new Date();
     });
 
-    submitButton.on('click', function () {
-      timeFormEnd = new Date();
-      timeForm = timeFormEnd - timeFormStart;
-
-      console.log('DATA:');
-      console.log('  Form time - ' + timeForm + 'ms');
-    });
-
-
     // Measure time spent on each text input
     textInputs.each(inputTimer);
 
@@ -347,6 +338,12 @@ function submitForm()
   console.log('ACTION:');
   console.log('  Activated submit button.');
 
+  timeFormEnd = new Date();
+  timeForm = timeFormEnd - timeFormStart;
+
+  console.log('DATA:');
+  console.log('  Form time - ' + timeForm + 'ms');
+
   var success;
 
   if (location.hash == '#baseline') {
@@ -363,10 +360,7 @@ function submitForm()
 
     attempts++;
 
-    console.log('STATUS:');
-    console.log('  Attemps - ' + attempts);
-    console.log('  Successes - ' + successes);
-    console.log('  Failures - ' + (attempts - successes));
+    updateStatus();
   }
   else if (location.hash == '#new_captcha') // --- New CAPTCHA --- //
   {
@@ -394,14 +388,23 @@ function submitForm()
 
       attempts++;
 
-      console.log('STATUS:');
-      console.log('  Attemps - ' + attempts);
-      console.log('  Successes - ' + successes);
-      console.log('  Failures - ' + (attempts - successes));
+      updateStatus();
     });
   }
 
   refreshPage();
+}
+
+function updateStatus()
+{
+  console.log('STATUS:');
+  console.log('  Attemps - ' + attempts);
+  console.log('  Successes - ' + successes);
+  console.log('  Failures - ' + (attempts - successes));
+
+  $('#status_attempts_value').text(attempts);
+  $('#status_successes_value').text(successes);
+  $('#status_failures_value').text(attempts - successes);
 }
 
 function formCheck() 
@@ -432,10 +435,8 @@ function formCheck()
     }
   });
 
-  console.log(formItemsValid + ' ' + formItems.length);
   formValid = (formItemsValid === formItems.length) ? true : false;
 
-  console.log('  Valid - ' + formValid);
   return formValid;
 }
 

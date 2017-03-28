@@ -236,3 +236,14 @@ input[type="radio"] {
   border-bottom: 2px solid #3E50B4;
   cursor: pointer;
 }
+
+section {
+  clear: both;
+  display: block;
+  float: left;
+  margin: 0 25px;
+
+  color: rgba(0,0,0,0.54);
+  font-size: 16px;
+  line-height: 24px;
+}
