@@ -20,6 +20,8 @@ var timeFormStart;
 var timeFormEnd;
 var timeForm;
 
+var mouseMoved = false;
+
 refreshPage();
 
 function refreshPage() {
@@ -28,6 +30,8 @@ function refreshPage() {
   $('form').trigger('reset');
 
   timePageLoad = new Date();
+  timeFormStart = false;
+  mouseMoved = false;
 
   var h3s = $('h3');
   var lis = $('li', '#nav_main');
@@ -116,6 +120,8 @@ function refreshPage() {
 
     $(document).on('mousemove', function (event) {
 
+      mouseMoved = true;
+
       // Handle every 10th mouse event (minimize performance impact)
       if ((i + 1) % 10 === 0) {
 
@@ -193,12 +199,12 @@ function inputTimer(i, e) {
       }
       // User finished input slowly
       else {
-        ratingChange = 5;
+        ratingChange = 10;
       }
     }
     // If input is finished empty
     else if (timeInput > 1000) {
-      ratingChange = 10;
+      ratingChange = 15;
     }
 
     console.log('Rating change: ');
@@ -297,13 +303,13 @@ function patternCheck(arrName, arr, operators, depth)
 
   if (depth === 0) {
     if (pattern) {
-      ratingChange = -20;
+      ratingChange = -30;
     }
     else if (random) {
-      ratingChange = -10;
+      ratingChange = -15;
     }
     else {
-      ratingChange = 1;
+      ratingChange = 5;
     }
 
     console.log('Rating change: ');
@@ -338,15 +344,10 @@ function submitForm()
   console.log('ACTION:');
   console.log('  Activated submit button.');
 
-  timeFormEnd = new Date();
-  timeForm = timeFormEnd - timeFormStart;
-
-  console.log('DATA:');
-  console.log('  Form time - ' + timeForm + 'ms');
-
+  var page = location.hash.substr(1);  
   var success;
 
-  if (location.hash == '#baseline') {
+  if (page == 'baseline') { // --- Baseline --- //
     // Standard form check
     success = formCheck();
 
@@ -360,10 +361,29 @@ function submitForm()
 
     attempts++;
 
+    var postData = {
+      'test': page,
+      'attacker': $('#input_name').val(),
+      'attempts': attempts,
+      'successes': successes
+    };
+
+    saveTest(postData); 
+    
     updateStatus();
+
+    refreshPage();
   }
-  else if (location.hash == '#new_captcha') // --- New CAPTCHA --- //
+  else if (page == 'new_captcha') // --- New CAPTCHA --- //
   {
+    timeFormEnd = new Date();
+    if (timeFormStart) {
+      timeForm = timeFormEnd - timeFormStart;
+
+      console.log('DATA:');
+      console.log('  Form time - ' + timeForm + 'ms');
+    }
+
     var rating; 
 
     success = formCheck();
@@ -374,7 +394,27 @@ function submitForm()
         console.log('Rating check:');
         rating = response['rating'];
         console.log('Rating: ' + rating);
+        
+        if (!mouseMoved) {
+          console.log('Rating change:');
+          console.log('  Cause - No mouse movement.');
+          
+          rating += -10;
+        } 
+        else {
+          console.log('Rating change:');
+          console.log('  Cause - Some mouse movement.');
 
+          rating += 5;
+        }
+
+        if (timeForm < 7500) {
+          console.log('Rating change:');
+          console.log('  Cause - Finished form to quickly.');
+
+          rating += -20;
+        } 
+        
         success = success && ((rating > 50) ? true : false);
       }
 
@@ -388,11 +428,20 @@ function submitForm()
 
       attempts++;
 
+      var postData = {
+        'test': page,
+        'attacker': $('#input_name').val(),
+        'attempts': attempts,
+        'successes': successes
+      };
+
+      saveTest(postData); 
+
       updateStatus();
+
+      refreshPage();
     });
   }
-
-  refreshPage();
 }
 
 function updateStatus()
@@ -470,6 +519,24 @@ function ratingChangeSuccess(response)
 {
   if (!phpErrorCheck(response)) {
     console.log('Rating: ' + response['rating']); 
+  }
+}
+
+function saveTest(postData) {
+  $.ajax({
+    url: "saveTest.php",
+    type: "post",
+    data: postData,
+    dataType: 'json',
+    success: saveTestSuccess,
+    error: ajaxFailure
+  });
+}
+
+function saveTestSuccess(response) 
+{
+  if (!phpErrorCheck(response)) {
+    console.log(response['msg']);
   }
 }
 
