@@ -15,11 +15,6 @@ const PATTERN_OPERATORS = {
 var attempts = 0;
 var successes = 0;
 
-var timePageLoad;
-var timeFormStart;
-var timeFormEnd;
-var timeForm;
-
 var mouseMoved = false;
 
 refreshPage();
@@ -29,8 +24,6 @@ function refreshPage() {
   // Reset form
   $('form').trigger('reset');
 
-  timePageLoad = new Date();
-  timeFormStart = false;
   mouseMoved = false;
 
   var h3s = $('h3');
@@ -95,15 +88,6 @@ function refreshPage() {
       success: ratingChangeSuccess,
       error: ajaxFailure
     });
-
-    // Measure time spent on entire form
-
-    nameInput.on('focus', function () {
-      timeFormStart = new Date();
-    });
-
-    // Measure time spent on each text input
-    textInputs.each(inputTimer);
 
     // Mouse movement analysis
 
@@ -174,57 +158,6 @@ function toggleNav() {
     // Hide nav
     nav.css('height', 0);
   }
-}
-
-function inputTimer(i, e) {
-  var timeInputStart;
-  var timeInputEnd;
-  var timeInput;
-
-  $(e).on('focus', function () {
-    timeInputStart = new Date();
-  });
-  $(e).on('blur', function () {
-    timeInputEnd = new Date();
-    timeInput = timeInputEnd - timeInputStart;
-
-    console.log('DATA:');
-    console.log('  Input "' + $(e).attr('name') + '" time - ' + timeInput + 'ms');
-
-    var ratingChange = 0;
-    if ($(e).val() != 'undefined' && $(e).val() != '') {
-      // If user finishes input to quickly
-      if (timeInput < 1000) {
-        ratingChange = -5;
-      }
-      // User finished input slowly
-      else {
-        ratingChange = 10;
-      }
-    }
-    // If input is finished empty
-    else if (timeInput > 1000) {
-      ratingChange = 15;
-    }
-
-    console.log('Rating change: ');
-    console.log('  Cause - input timer');
-
-    var ratingOp = 'mod';
-    var postData = {
-      'op': ratingOp, 
-      'change': ratingChange
-    };
-
-    $.ajax({
-      url: "rating.php",
-      type: "post",
-      data: postData,
-      dataType: 'json',
-      success: ratingChangeSuccess,
-      error: ajaxFailure
-    });
-  });
 }
 
 function patternCheck(arrName, arr, operators, depth) 
@@ -376,14 +309,6 @@ function submitForm()
   }
   else if (page == 'new_captcha') // --- New CAPTCHA --- //
   {
-    timeFormEnd = new Date();
-    if (timeFormStart) {
-      timeForm = timeFormEnd - timeFormStart;
-
-      console.log('DATA:');
-      console.log('  Form time - ' + timeForm + 'ms');
-    }
-
     var rating; 
 
     success = formCheck();
@@ -407,13 +332,6 @@ function submitForm()
 
           rating += 5;
         }
-
-        if (timeForm < 7500) {
-          console.log('Rating change:');
-          console.log('  Cause - Finished form to quickly.');
-
-          rating += -20;
-        } 
         
         success = success && ((rating > 50) ? true : false);
       }
