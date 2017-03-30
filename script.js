@@ -42,8 +42,7 @@ function refreshPage() {
   console.log('LOADING:');
   console.log('  ' + page);
 
-  // ----------------------------------------------- //
-  // Event listeners //
+  // --- Event listeners --- //
 
   // Remove all old listeners (to avoid overlap)
   $(document).off();
@@ -67,8 +66,11 @@ function refreshPage() {
 
   submitButton.on('click', submitForm);
 
+  // --- / Event listeners --- //
 
-  // --- New CAPTCHA --- //
+  
+  // ----------------------------------------------- //
+  // New CAPTCHA //
 
   if (page === 'new_captcha') {
 
@@ -89,9 +91,10 @@ function refreshPage() {
       error: ajaxFailure
     });
 
+    // --- Event listeners --- //
+
     // Mouse movement analysis
 
-    var i = 0;
     var pos = {
       x: 0,
       y: 0
@@ -102,12 +105,14 @@ function refreshPage() {
     };
     var pattern = false;
 
+    var mousemoveCount= 0;
+    
     $(document).on('mousemove', function (event) {
 
       mouseMoved = true;
 
       // Handle every 10th mouse event (minimize performance impact)
-      if ((i + 1) % 10 === 0) {
+      if ((mousemoveCount+ 1) % 10 === 0) {
 
         // Check for patterns in mouse movements
 
@@ -117,26 +122,55 @@ function refreshPage() {
         posArr.y.push(pos.y);
         
         // Analyze and compare last 10 recorded mousemove events
-        if (i > 0 && ((i + 1) % 100) === 0) {
+        if (mousemoveCount> 0 && ((mousemoveCount+ 1) % 100) === 0) {
+          console.log('');
           console.log('Mouse movement:');
-          pattern = patternCheck('x', posArr.x, PATTERN_OPERATORS) || patternCheck('y', posArr.y, PATTERN_OPERATORS);
+          patternCheck('x', posArr.x, PATTERN_OPERATORS) || patternCheck('y', posArr.y, PATTERN_OPERATORS);
         }
       }
 
-      if (i >= 99) {
+      if (mousemoveCount>= 99) {
         posArr.x = [];
         posArr.y = [];
-        i = 0;
+        mousemoveCount= 0;
       }
       else {
-        i++;
+        mousemoveCount++;
       }
     });
+
+    // Keystroke analysis  
+
+    var keystrokeTimes = [];
+
+    var keypressCount = 0;
+    
+    $(document).keypress(function (e) {
+      var keystrokeTime = new Date();
+      keystrokeTimes.push(keystrokeTime);
+
+      if (keypressCount >= 3) {
+        console.log('');
+        console.log('Keystroke analysis:');
+
+        operators = {
+          'differences': PATTERN_OPERATORS.differences
+        };
+
+        patternCheck('keystrokes', keystrokeTimes, operators);
+
+        keystrokeTimes = [];
+        keypressCount = 0;
+      }
+      else {
+        keypressCount++;
+      }  
+    });
+
+    // --- / Event listeners --- //
   }
 
-  // --- /New CAPTCHA --- //
-
-  // /Event listeners //
+  // / New CATPTCHA //
   // ----------------------------------------------- //
 }
 
@@ -162,6 +196,7 @@ function toggleNav() {
 
 function patternCheck(arrName, arr, operators, depth) 
 {
+  console.log('');
   console.log('  Pattern check ');
   console.log('  Array - ' + arrName);
 
@@ -199,6 +234,10 @@ function patternCheck(arrName, arr, operators, depth)
 
     for (i = 0; i < arr.length - 1; i++) {
       relation = op(arr[i + 1], arr[i]);
+
+      if (arrName == 'keystrokes' || arrName == 'keystrokes_differences') {
+        relation = Math.round(relation);
+      }
       relations.push(relation);
 
       if (i > 0) {
@@ -206,7 +245,9 @@ function patternCheck(arrName, arr, operators, depth)
         anomaliesTotal += anomaly;
       }
     }
-    
+
+    console.log(relations);
+
     // Look for randomized sequence
     if (depth > 0 && key == 'differences' && arrName.substr(2) == 'differences') {
       console.log(anomaliesTotal / (relations.length - 1));
@@ -410,15 +451,25 @@ function formCheck()
 // Control //
 // ----------------------------------------------- //
 
-function testPatternCheck(arr) {
+function testPatternCheck(arr)
+{
   patternCheck('test', arr, PATTERN_OPERATORS);
+}
+
+function simulateKeypress(interval)
+{
+  setInterval(function()
+  {
+    $(document).keypress();
+  }, interval);
 }
 
 
 // AJAX //
 // ----------------------------------------------- //
 
-function getRating() {
+function getRating()
+{
   var ratingOp = 'get';
   var postData = {
     'op': ratingOp
