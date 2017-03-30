@@ -196,7 +196,6 @@ function toggleNav() {
 
 function patternCheck(arrName, arr, operators, depth) 
 {
-  console.log('');
   console.log('  Pattern check ');
   console.log('  Array - ' + arrName);
 
@@ -246,11 +245,8 @@ function patternCheck(arrName, arr, operators, depth)
       }
     }
 
-    console.log(relations);
-
     // Look for randomized sequence
     if (depth > 0 && key == 'differences' && arrName.substr(2) == 'differences') {
-      console.log(anomaliesTotal / (relations.length - 1));
       if (Math.round(anomaliesTotal / (relations.length - 1)) > 100) {
         random = true;
 
