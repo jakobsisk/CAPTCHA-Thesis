@@ -103,7 +103,6 @@ function refreshPage() {
       x: [],
       y: []
     };
-    var pattern = false;
 
     var mousemoveCount= 0;
     
@@ -122,10 +121,11 @@ function refreshPage() {
         posArr.y.push(pos.y);
         
         // Analyze and compare last 10 recorded mousemove events
-        if (mousemoveCount> 0 && ((mousemoveCount+ 1) % 100) === 0) {
+        if (mousemoveCount> 0 && ((mousemoveCount + 1) % 100) === 0) {
           console.log('');
           console.log('Mouse movement:');
-          patternCheck('x', posArr.x, PATTERN_OPERATORS) || patternCheck('y', posArr.y, PATTERN_OPERATORS);
+          patternCheck('x', posArr.x, PATTERN_OPERATORS);
+          patternCheck('y', posArr.y, PATTERN_OPERATORS);
         }
       }
 
