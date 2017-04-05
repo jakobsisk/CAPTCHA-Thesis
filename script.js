@@ -5,11 +5,10 @@
     100 - low probability user is a bot
 */
 
-// Operators used to analyze relations between coordinates in mouse movements 
+// Operators used in pattern recognition
 const PATTERN_OPERATORS = {
   'differences' : function (c1, c2) { return makePositive(c1 - c2) },
-  'quotients' : function (c1, c2) { return c1 / c2 },
-  'square roots' : function (c1, c2) { return Math.sqrt(c2) }
+  'quotients' : function (c1, c2) { return c1 / c2 }
 };
 
 var attempts = 0;
@@ -145,7 +144,7 @@ function refreshPage() {
 
     var keypressCount = 0;
     
-    $(document).keypress(function (e) {
+    $(document).keypress(function (event) {
       var keystrokeTime = new Date();
       keystrokeTimes.push(keystrokeTime);
 
@@ -198,6 +197,7 @@ function patternCheck(arrName, arr, operators, depth)
 {
   console.log('  Pattern check ');
   console.log('  Array - ' + arrName);
+  console.log('  Array - ' + arr);
 
   var pattern = false;
   var random = false;
