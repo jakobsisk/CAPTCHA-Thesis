@@ -7,8 +7,9 @@
 
 // Operators used in pattern recognition
 const PATTERN_OPERATORS = {
-  'differences' : function (c1, c2) { return makePositive(c1 - c2) },
-  'quotients' : function (c1, c2) { return c1 / c2 }
+  'differences' : function (c1, c2) { return round(makePositive(c1 - c2), 2) },
+  'quotients': function (c1, c2) { return round(c1 / c2, 2) },
+  'squareRoot': function (c1, c2) { return round(Math.sqrt(c2)) }
 };
 
 var attempts = 0;
@@ -114,8 +115,8 @@ function refreshPage() {
 
         // Check for patterns in mouse movements
 
-        pos.x = Math.round((-event.pageX > 0) ? -event.pageX : event.pageX); 
-        pos.y = Math.round((-event.pageY > 0) ? -event.pageY : event.pageY);
+        pos.x = round((-event.pageX > 0) ? -event.pageX : event.pageX, 0); 
+        pos.y = round((-event.pageY > 0) ? -event.pageY : event.pageY, 0);
         posArr.x.push(pos.x);
         posArr.y.push(pos.y);
         
@@ -234,25 +235,30 @@ function patternCheck(arrName, arr, operators, depth)
     for (i = 0; i < arr.length - 1; i++) {
       relation = op(arr[i + 1], arr[i]);
 
-      if (arrName == 'keystrokes' || arrName == 'keystrokes_differences') {
-        relation = Math.round(relation);
+      if (arrName == 'keystrokes' || arrName.substr(0, 9) == 'keystrokes') {
+        relation = round(relation, 0);
       }
-      relations.push(relation);
-
+      if (!isNaN(relation)) {
+        relations.push(relation);
+      }
+      
       if (i > 0) {
         anomaly = makePositive(relations[i] - relations[i - 1]);
         anomaliesTotal += anomaly;
       }
     }
 
+    console.log('  Relations - ' + relations);
+
     // Look for randomized sequence
     if (depth > 0 && key == 'differences' && arrName.substr(2) == 'differences') {
-      if (Math.round(anomaliesTotal / (relations.length - 1)) > 100) {
+      if (Math.round(anomaliesTotal / (relations.length - 1) > 100, 0)) {
         random = true;
 
         console.log('  Found likely random sequence.');
       }
     }
+    console.log(anomaliesTotal / (relations.length - 1));
 
     // If there is pattern or if numbers seem random
     if (anomaliesTotal === 0) {
@@ -307,6 +313,10 @@ function patternCheck(arrName, arr, operators, depth)
 function makePositive(num) 
 {
   return (-num > 0) ? -num : num;
+}
+
+function round(value, decimals) {
+  return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
 }
 
 function submitForm() 
