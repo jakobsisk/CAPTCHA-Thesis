@@ -134,10 +134,8 @@ function refreshPage() {
         
         // Analyze and compare last 10 recorded mousemove events
         if (mousemoveCount > 0 && ((mousemoveCount + 1) % MOUSEMOVE_SIZE) === 0) {
-          console.log('');
-          console.log('Mouse movement:');
-          patternCheck('x', posArr.x, PATTERN_OPERATORS);
-          patternCheck('y', posArr.y, PATTERN_OPERATORS);
+          patternCheck('Mouse coordinates - x', posArr.x, PATTERN_OPERATORS);
+          patternCheck('Mouse coordinates - y', posArr.y, PATTERN_OPERATORS);
         }
       }
 
@@ -210,7 +208,8 @@ function toggleNav() {
 
 function patternCheck(arrName, arr, operators, depth) 
 {
-  console.log('  Pattern check ');
+  console.log('');
+  console.log('[Pattern check]');
   console.log('  Array - ' + arrName);
   console.log('  Array - ' + arr);
 
@@ -237,8 +236,8 @@ function patternCheck(arrName, arr, operators, depth)
 
   $.each(operators, function (key, op) {
 
-    console.log('  Depth - ' + depth);
-    console.log('  Operation - ' + key);
+    console.log('Depth - ' + depth);
+    console.log('Operation - ' + key);
 
     relation = 0;
     relations = [];
@@ -262,14 +261,14 @@ function patternCheck(arrName, arr, operators, depth)
       }
     }
 
-    console.log('  Relations - ' + relations);
-
+    console.log('Relations - ' + relations);
+    
     // Look for randomized sequence
-    if (depth > 0 && key == 'differences' && arrName.substr(2) == 'differences') {
-      if (Math.round(anomaliesTotal / (relations.length - 1) > 100, 0)) {
+    if (depth > 0 && key == 'differences' && arrName.substr(22) == 'differences') {
+      if (Math.round((anomaliesTotal / (relations.length - 1)), 0) > 100) {
         random = true;
 
-        console.log('  Found likely random sequence.');
+        console.log('Found likely random sequence.');
       }
     }
     console.log(anomaliesTotal / (relations.length - 1));
