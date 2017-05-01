@@ -12,6 +12,18 @@ const PATTERN_OPERATORS = {
   'squareRoot': function (c1, c2) { return round(Math.sqrt(c2)) }
 };
 
+// How often (ms) should mousemovements be registered (can impact performance)
+const MOUSEMOVE_TICK = 10; 
+// How many coordinates should be sent to analysis
+const MOUSEMOVE_SIZE = 100;
+// How often should coordinates be sent to analysis
+const MOUSEMOVE_FREQ = 100;
+
+// How many keystroke timestamps should be sent to analysis
+const KEYSTROKES_SIZE = 3;
+// How often should keystrokes be sent for analysis
+const KEYSTROKES_FREQ = 3;
+
 var attempts = 0;
 var successes = 0;
 
@@ -111,7 +123,7 @@ function refreshPage() {
       mouseMoved = true;
 
       // Handle every 10th mouse event (minimize performance impact)
-      if ((mousemoveCount+ 1) % 10 === 0) {
+      if ((mousemoveCount + 1) % MOUSEMOVE_TICK === 0) {
 
         // Check for patterns in mouse movements
 
@@ -121,7 +133,7 @@ function refreshPage() {
         posArr.y.push(pos.y);
         
         // Analyze and compare last 10 recorded mousemove events
-        if (mousemoveCount> 0 && ((mousemoveCount + 1) % 100) === 0) {
+        if (mousemoveCount > 0 && ((mousemoveCount + 1) % MOUSEMOVE_SIZE) === 0) {
           console.log('');
           console.log('Mouse movement:');
           patternCheck('x', posArr.x, PATTERN_OPERATORS);
@@ -129,7 +141,7 @@ function refreshPage() {
         }
       }
 
-      if (mousemoveCount>= 99) {
+      if (mousemoveCount > MOUSEMOVE_FREQ) {
         posArr.x = [];
         posArr.y = [];
         mousemoveCount= 0;
@@ -149,7 +161,7 @@ function refreshPage() {
       var keystrokeTime = new Date();
       keystrokeTimes.push(keystrokeTime);
 
-      if (keypressCount >= 3) {
+      if (keypressCount >= KEYSTROKES_FREQ) {
         console.log('');
         console.log('Keystroke analysis:');
 
@@ -159,8 +171,10 @@ function refreshPage() {
 
         patternCheck('keystrokes', keystrokeTimes, operators);
 
-        keystrokeTimes = [];
-        keypressCount = 0;
+        if (keypressCount >= KEYSTROKES_SIZE) {
+          keystrokeTimes = [];
+          keypressCount = 0;
+        }        
       }
       else {
         keypressCount++;
