@@ -7,11 +7,12 @@
 
 // Operators used in pattern recognition
 const PATTERN_OPERATORS = {
-  'differences' : function (c1, c2) { return round(makePositive(c1 - c2), 2) },
-  'quotients': function (c1, c2) { return round(c1 / c2, 2) },
-  'squareRoot': function (c1, c2) { return round(Math.sqrt(c2)) }
+  differences: function (c1, c2) { return +(Math.abs(c1 - c2).toFixed(3)) },
+  quotients: function (c1, c2) { return (+(c1 / c2) != Infinity) ? +((c1 / c2).toFixed(3)) : 0 },
+  squareRoot: function (c1, c2) { return +(Math.sqrt(c2).toFixed(3)) }
 };
 
+const MOUSEMOVE_ENABLE = false;
 // How often (ms) should mousemovements be registered (can impact performance)
 const MOUSEMOVE_TICK = 10; 
 // How many coordinates should be sent to analysis
@@ -19,6 +20,7 @@ const MOUSEMOVE_SIZE = 100;
 // How often should coordinates be sent to analysis
 const MOUSEMOVE_FREQ = 100;
 
+const KEYSTROKES_ENABLE = false;
 // How many keystroke timestamps should be sent to analysis
 const KEYSTROKES_SIZE = 3;
 // How often should keystrokes be sent for analysis
@@ -91,7 +93,7 @@ function refreshPage() {
     // Start with uncertain user rating
     var ratingOp = 'reset';
     var postData = {
-      'op': ratingOp
+      op: ratingOp
     };
 
     $.ajax({
@@ -107,77 +109,80 @@ function refreshPage() {
 
     // Mouse movement analysis
 
-    var pos = {
-      x: 0,
-      y: 0
-    };
-    var posArr = {
-      x: [],
-      y: []
-    };
+    if (MOUSEMOVE_ENABLE) {      
+      var pos = {
+        x: 0,
+        y: 0
+      };
+      var posArr = {
+        x: [],
+        y: []
+      };
 
-    var mousemoveCount= 0;
-    
-    $(document).on('mousemove', function (event) {
+      var mousemoveCount = 0;
 
-      mouseMoved = true;
+      $(document).on('mousemove', function (event) {
+        mouseMoved = true;
 
-      // Handle every 10th mouse event (minimize performance impact)
-      if ((mousemoveCount + 1) % MOUSEMOVE_TICK === 0) {
+        // Handle every 10th mouse event (minimize performance impact)
+        if ((mousemoveCount + 1) % MOUSEMOVE_TICK === 0) {
 
-        // Check for patterns in mouse movements
+          // Check for patterns in mouse movements
 
-        pos.x = round((-event.pageX > 0) ? -event.pageX : event.pageX, 0); 
-        pos.y = round((-event.pageY > 0) ? -event.pageY : event.pageY, 0);
-        posArr.x.push(pos.x);
-        posArr.y.push(pos.y);
-        
-        // Analyze and compare last 10 recorded mousemove events
-        if (mousemoveCount > 0 && ((mousemoveCount + 1) % MOUSEMOVE_SIZE) === 0) {
-          patternCheck('Mouse coordinates - x', posArr.x, PATTERN_OPERATORS);
-          patternCheck('Mouse coordinates - y', posArr.y, PATTERN_OPERATORS);
+          pos.x = Math.round((-event.pageX > 0) ? -event.pageX : event.pageX, 0);
+          pos.y = Math.round((-event.pageY > 0) ? -event.pageY : event.pageY, 0);
+          posArr.x.push(pos.x);
+          posArr.y.push(pos.y);
+
+          // Analyze and compare last 10 recorded mousemove events
+          if (mousemoveCount > 0 && ((mousemoveCount + 1) % MOUSEMOVE_SIZE) === 0) {
+            patternCheck('Mouse coordinates - x', posArr.x, PATTERN_OPERATORS);
+            patternCheck('Mouse coordinates - y', posArr.y, PATTERN_OPERATORS);
+          }
         }
-      }
 
-      if (mousemoveCount > MOUSEMOVE_FREQ) {
-        posArr.x = [];
-        posArr.y = [];
-        mousemoveCount= 0;
-      }
-      else {
-        mousemoveCount++;
-      }
-    });
+        if (mousemoveCount > MOUSEMOVE_FREQ) {
+          posArr.x = [];
+          posArr.y = [];
+          mousemoveCount = 0;
+        }
+        else {
+          mousemoveCount++;
+        }
+      });
+    }
 
     // Keystroke analysis  
 
-    var keystrokeTimes = [];
+    if (KEYSTROKES_ENABLE) {
+      var keystrokeTimes = [];
 
-    var keypressCount = 0;
-    
-    $(document).keypress(function (event) {
-      var keystrokeTime = new Date();
-      keystrokeTimes.push(keystrokeTime);
+      var keypressCount = 0;
 
-      if (keypressCount >= KEYSTROKES_FREQ) {
-        console.log('');
-        console.log('Keystroke analysis:');
+      $(document).keypress(function (event) {
+        var keystrokeTime = new Date();
+        keystrokeTimes.push(keystrokeTime);
 
-        operators = {
-          'differences': PATTERN_OPERATORS.differences
-        };
+        if (keypressCount >= KEYSTROKES_FREQ) {
+          console.log('');
+          console.log('Keystroke analysis:');
 
-        patternCheck('keystrokes', keystrokeTimes, operators);
+          operators = {
+            differences: PATTERN_OPERATORS.differences
+          };
 
-        if (keypressCount >= KEYSTROKES_SIZE) {
-          keystrokeTimes = [];
-          keypressCount = 0;
-        }        
-      }
-      else {
-        keypressCount++;
-      }  
-    });
+          patternCheck('keystrokes', keystrokeTimes, operators);
+
+          if (keypressCount >= KEYSTROKES_SIZE) {
+            keystrokeTimes = [];
+            keypressCount = 0;
+          }
+        }
+        else {
+          keypressCount++;
+        }
+      });
+    }
 
     // --- / Event listeners --- //
   }
@@ -186,8 +191,7 @@ function refreshPage() {
   // ----------------------------------------------- //
 }
 
-function resetCounters() 
-{
+function resetCounters() {
   attempts = 0;
   successes = 0;
 }
@@ -206,13 +210,7 @@ function toggleNav() {
   }
 }
 
-function patternCheck(arrName, arr, operators, depth) 
-{
-  console.log('');
-  console.log('[Pattern check]');
-  console.log('  Array - ' + arrName);
-  console.log('  Array - ' + arr);
-
+function patternCheck(arrName, arr, operators, depth) {
   var pattern = false;
   var random = false;
   var status = '';
@@ -232,16 +230,21 @@ function patternCheck(arrName, arr, operators, depth)
     // console.log('Pattern check.');
 
     depth = 0;
+
+    console.log('');
   }
 
   $.each(operators, function (key, op) {
 
-    console.log('Depth - ' + depth);
-    console.log('Operation - ' + key);
+    console.log('[Pattern check]');
+    console.log('  Array - ' + arrName);
+    console.log('  Array - ' + arr);    
+    console.log('  Depth - ' + depth);
+    console.log('  Operation - ' + key);
 
     relation = 0;
     relations = [];
-
+    
     anomaly = 0;
     anomaliesTotal = 0;
 
@@ -249,30 +252,27 @@ function patternCheck(arrName, arr, operators, depth)
       relation = op(arr[i + 1], arr[i]);
 
       if (arrName == 'keystrokes' || arrName.substr(0, 9) == 'keystrokes') {
-        relation = round(relation, 0);
+        relation = +(relation.toFixed(3));
       }
-      if (!isNaN(relation)) {
-        relations.push(relation);
-      }
-      
-      if (i > 0) {
-        anomaly = makePositive(relations[i] - relations[i - 1]);
+      relations[i] = relation;
+
+      if (relations[i - 1]) {
+        anomaly = Math.abs(relation - relations[i - 1]);
         anomaliesTotal += anomaly;
       }
     }
-
-    console.log('Relations - ' + relations);
     
     // Look for randomized sequence
     if (depth > 0 && key == 'differences' && arrName.substr(22) == 'differences') {
-      if (Math.round((anomaliesTotal / (relations.length - 1)), 0) > 100) {
+      if (+((anomaliesTotal / (relations.length - 1)).toFixed(3)) > 100) {
         random = true;
 
         console.log('Found likely random sequence.');
       }
     }
-    console.log(anomaliesTotal / (relations.length - 1));
 
+    console.log('---ANOMALYTOTAL: ' + anomaliesTotal);     
+    console.log('---AVERAGE ANOMALY: ' + anomaliesTotal / relations.length);    
     // If there is pattern or if numbers seem random
     if (anomaliesTotal === 0) {
       pattern = true;
@@ -280,11 +280,18 @@ function patternCheck(arrName, arr, operators, depth)
       console.log('Found pattern');
     }
     else if (!random && depth === 0) {
+      console.log('>> Going deeper');
+
       pattern = patternCheck(arrName + '_' + key, relations, operators, depth + 1);
+
+      console.log('>> Going up');
     }
 
     if (pattern || random) {
       return false;
+    }
+    else {
+      console.log('No pattern found.');
     }
   });
 
@@ -301,13 +308,14 @@ function patternCheck(arrName, arr, operators, depth)
       ratingChange = 5;
     }
 
-    console.log('Rating change: ');
+    console.log('[Rating change] ');
     console.log('  Cause - pattern check.');
+    console.log('  Amount - ' + ratingChange);
 
     var ratingOp = 'mod';
     var postData = {
-      'op': ratingOp, 
-      'change': ratingChange
+      op: ratingOp, 
+      change: ratingChange
     };
 
      $.ajax({
@@ -323,17 +331,7 @@ function patternCheck(arrName, arr, operators, depth)
   return pattern || random;
 }
 
-function makePositive(num) 
-{
-  return (-num > 0) ? -num : num;
-}
-
-function round(value, decimals) {
-  return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
-}
-
-function submitForm() 
-{
+function submitForm() {
   console.log('ACTION:');
   console.log('  Activated submit button.');
 
@@ -355,10 +353,10 @@ function submitForm()
     attempts++;
 
     var postData = {
-      'test': page,
-      'attacker': $('#input_name').val(),
-      'attempts': attempts,
-      'successes': successes
+      test: page,
+      attacker: $('#input_name').val(),
+      attempts: attempts,
+      successes: successes
     };
 
     saveTest(postData); 
@@ -367,8 +365,7 @@ function submitForm()
 
     refreshPage();
   }
-  else if (page == 'new_captcha') // --- New CAPTCHA --- //
-  {
+  else if (page == 'new_captcha') { // --- New CAPTCHA --- //
     var rating; 
 
     success = formCheck();
@@ -407,10 +404,10 @@ function submitForm()
       attempts++;
 
       var postData = {
-        'test': page,
-        'attacker': $('#input_name').val(),
-        'attempts': attempts,
-        'successes': successes
+        test: page,
+        attacker: $('#input_name').val(),
+        attempts: attempts,
+        successes: successes
       };
 
       saveTest(postData); 
@@ -422,8 +419,7 @@ function submitForm()
   }
 }
 
-function updateStatus()
-{
+function updateStatus() {
   console.log('STATUS:');
   console.log('  Attemps - ' + attempts);
   console.log('  Successes - ' + successes);
@@ -434,8 +430,7 @@ function updateStatus()
   $('#status_failures_value').text(attempts - successes);
 }
 
-function formCheck() 
-{
+function formCheck() {
   console.log('Form check:');
 
   // Validate form
@@ -467,31 +462,14 @@ function formCheck()
   return formValid;
 }
 
-// Control //
-// ----------------------------------------------- //
-
-function testPatternCheck(arr)
-{
-  patternCheck('test', arr, PATTERN_OPERATORS);
-}
-
-function simulateKeypress(interval)
-{
-  setInterval(function()
-  {
-    $(document).keypress();
-  }, interval);
-}
-
 
 // AJAX //
 // ----------------------------------------------- //
 
-function getRating()
-{
+function getRating() {
   var ratingOp = 'get';
   var postData = {
-    'op': ratingOp
+    op: ratingOp
   };
 
   return $.ajax({
@@ -503,8 +481,7 @@ function getRating()
   });
 }
 
-function ratingChangeSuccess(response)
-{
+function ratingChangeSuccess(response) {
   if (!phpErrorCheck(response)) {
     console.log('Rating: ' + response['rating']); 
   }
@@ -521,15 +498,13 @@ function saveTest(postData) {
   });
 }
 
-function saveTestSuccess(response) 
-{
+function saveTestSuccess(response) {
   if (!phpErrorCheck(response)) {
     console.log(response['msg']);
   }
 }
 
-function phpErrorCheck(response) 
-{
+function phpErrorCheck(response) {
   var error = false;
 
   if (response['error'] != 'none') {
@@ -542,9 +517,91 @@ function phpErrorCheck(response)
   return error;
 }
 
-function ajaxFailure(jqXHR, textStatus, errorThrown)
-{
+function ajaxFailure(jqXHR, textStatus, errorThrown) {
   console.log(jqXHR);
   console.log(textStatus);
   console.log(errorThrown);
+}
+
+
+// Control //
+// ----------------------------------------------- //
+
+function testPatternCheck(type, interv, n) {
+  var name;
+  var f;
+
+  switch (type) {
+    case 'arit':
+      name = 'Arithmetic sequence';
+      f = function (x, tail) {
+        return x + 5
+      };
+      
+      break;
+    case 'geo':
+      name = 'Geometric sequence';
+      f = function (x, tail) {
+        return x * 5
+      };
+
+      break;
+    case 'sq':
+      name = 'Square sequence';
+      f = function (x, tail) {
+        return x * x
+      };
+
+      break;
+
+    case 'exp':
+      name = 'Exponential sequence';
+      f = function (x, tail) {
+        return (x * x * x) + (2 * x) + 7
+      };
+      
+      break;
+
+    case 'fib':
+      name = 'Fibonacci sequence';
+      f = function (x, tail) {
+        var prev = (x <= 1) ? 1 : tail[x - 2];
+        var prev2 = (x <= 2) ? 0 : tail[x - 3]
+
+        return prev + prev2;
+      };
+  }
+  
+  var seq = [];
+  var results = [];
+
+  for (var i = 1; i <= (n * interv); i++) {
+    console.log(i);
+    seq.push(f(i, seq));
+
+    if (i % interv === 0) {
+      results.push(patternCheck(name, seq, PATTERN_OPERATORS));
+
+      seq = [];
+    }
+  }
+  
+  console.log('[TEST]');
+  console.log('  Sequence - ' + name);
+  console.log('  Function - ' + f);
+  console.log('Results:');
+  console.log(results);
+}
+
+function testPatternCheckCustom(arr) {
+  console.log('');
+  console.log('[TEST]');
+  console.log('  Custom sequence');
+  patternCheck('Custom sequence', arr, PATTERN_OPERATORS);
+}
+
+function simulateKeypress(interval) {
+  setInterval(function () {
+    $(document).keypress();
+  }, interval);
 }
