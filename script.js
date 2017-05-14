@@ -109,7 +109,7 @@ function refreshPage() {
 
     // Mouse movement analysis
 
-    if (MOUSEMOVE_ENABLE) {      
+    if (MOUSEMOVE_ENABLE) {    
       var pos = {
         x: 0,
         y: 0
@@ -124,7 +124,7 @@ function refreshPage() {
       $(document).on('mousemove', function (event) {
         mouseMoved = true;
 
-        // Handle every 10th mouse event (minimize performance impact)
+        // Handle every nth mouse event (minimize performance impact)
         if ((mousemoveCount + 1) % MOUSEMOVE_TICK === 0) {
 
           // Check for patterns in mouse movements
@@ -154,7 +154,7 @@ function refreshPage() {
 
     // Keystroke analysis  
 
-    if (KEYSTROKES_ENABLE) {
+    if (window.KEYSTROKES_ENABLE) {
       var keystrokeTimes = [];
 
       var keypressCount = 0;
@@ -165,7 +165,7 @@ function refreshPage() {
 
         if (keypressCount >= KEYSTROKES_FREQ) {
           console.log('');
-          console.log('Keystroke analysis:');
+          console.log('[Registering keystrokes]');
 
           operators = {
             differences: PATTERN_OPERATORS.differences
@@ -262,19 +262,21 @@ function patternCheck(arrName, arr, operators, depth) {
       }
     }
     
+    var avgAnomaly = +(anomaliesTotal / relations.length).toFixed(3);
+    console.log('---ANOMALYTOTAL: ' + anomaliesTotal);
+    console.log('---AVERAGE ANOMALY: ' + avgAnomaly);
+    
     // Look for randomized sequence
-    if (depth > 0 && key == 'differences' && arrName.substr(22) == 'differences') {
-      if (+((anomaliesTotal / (relations.length - 1)).toFixed(3)) > 100) {
+    if (depth > 0 && key == 'differences') {   
+      if (avgAnomaly > 100) {
         random = true;
 
         console.log('Found likely random sequence.');
       }
     }
-
-    console.log('---ANOMALYTOTAL: ' + anomaliesTotal);     
-    console.log('---AVERAGE ANOMALY: ' + anomaliesTotal / relations.length);    
+    
     // If there is pattern or if numbers seem random
-    if (anomaliesTotal === 0) {
+    if (avgAnomaly === 0) {
       pattern = true;
 
       console.log('Found pattern');
@@ -367,7 +369,7 @@ function submitForm() {
   }
   else if (page == 'new_captcha') { // --- New CAPTCHA --- //
     var rating; 
-
+    
     success = formCheck();
 
     getRating().done(function(response)
@@ -483,7 +485,7 @@ function getRating() {
 
 function ratingChangeSuccess(response) {
   if (!phpErrorCheck(response)) {
-    console.log('Rating: ' + response['rating']); 
+    //console.log('Rating: ' + response['rating']); 
   }
 }
 
@@ -570,17 +572,33 @@ function testPatternCheck(type, interv, n) {
 
         return prev + prev2;
       };
+
+      break;
+
+    case 'rand':
+      name = 'Random sequence';
+      f = function (x, tail) {
+        return Math.floor((Math.random() * 1000) + 1);
+      }
+
+      break;
   }
   
   var seq = [];
-  var results = [];
-
-  for (var i = 1; i <= (n * interv); i++) {
-    console.log(i);
+  var patterns = 0;
+  var i;
+  
+  for (i = 1; i <= (n * interv); i++) {
     seq.push(f(i, seq));
 
     if (i % interv === 0) {
-      results.push(patternCheck(name, seq, PATTERN_OPERATORS));
+      console.log('----');
+      console.log('Interval #' + i / interv);
+      console.log('----');
+
+      if (patternCheck(name, seq, PATTERN_OPERATORS)) {
+        patterns++;
+      }
 
       seq = [];
     }
@@ -589,8 +607,10 @@ function testPatternCheck(type, interv, n) {
   console.log('[TEST]');
   console.log('  Sequence - ' + name);
   console.log('  Function - ' + f);
-  console.log('Results:');
-  console.log(results);
+  console.log('  Interval size - ' + interv);
+  console.log('  Intervals amount - ' + n);
+  console.log('  Patterns found - ' + patterns);
+  console.log('  Successrate - ' + ((patterns / n) * 100) + '%');
 }
 
 function testPatternCheckCustom(arr) {
@@ -598,6 +618,77 @@ function testPatternCheckCustom(arr) {
   console.log('[TEST]');
   console.log('  Custom sequence');
   patternCheck('Custom sequence', arr, PATTERN_OPERATORS);
+}
+
+function testDeCastel(fidel, interv) {
+  var seq = [];
+
+  var x1 = 100;
+  var x2 = 300;
+  var x3 = 830;
+
+  seq.push(x1);
+
+  var pxa1 = (x2 - x1) / fidel;
+  var pxa2 = (x3 - x2) / fidel;
+
+  var p5x = x1;
+
+  var p6x = x2;
+
+  var p7x;
+
+  stz = 1.0 / fidel;
+
+  var lf = 0.0;
+  var hf = 1.0;
+
+  var lx = x1;
+
+  var patterns = 0;
+
+  for (var i = 1; i <= fidel; i++) {
+    lf += stz;
+    hf -= stz;
+
+    p7x = (p6x * lf) + (p5x * hf);
+
+    p5x += pxa1;
+
+    p6x += pxa2;
+
+    if (lx < x2 && p7x > x2) {
+      seq.push(x2);
+    }
+
+    lx = p7x;
+    
+    seq.push(p7x.toFixed(3));
+
+    if (i === fidel) {
+      seq.push(x3);
+    }    
+
+    if (i % interv === 0) {
+      console.log('----');
+      console.log('Interval #' + i / interv);
+      console.log('----');
+
+      if (patternCheck('De Casteljaus algorithm', seq, PATTERN_OPERATORS)) {
+        patterns++;
+      }
+      
+      console.log(seq);
+      seq = [];
+    }
+  }
+
+  console.log('[TEST]');
+  console.log('  Sequence - De Casteljaus algorithm');
+  console.log('  Interval size - ' + interv);
+  console.log('  Intervals amount - ' + (i - 1) / interv);
+  console.log('  Patterns found - ' + patterns);
+  console.log('  Successrate - ' + ((patterns / ((i - 1) / interv)) * 100) + '%');
 }
 
 function simulateKeypress(interval) {
