@@ -1,0 +1,94 @@
+<html>
+<head>
+<style>
+</style>
+
+<script>
+
+  var ctx;
+  var imagesafe=false;
+  var acanvas;
+
+  function initcanvas()
+  {
+    acanvas = document.getElementById("myCanvas");
+    if (acanvas.getContext) {
+      ctx = acanvas.getContext("2d");
+      ctx.strokeRect(18,18,402,402);
+    }
+
+  drawcurve(100,100,250,200,400,150);
+  drawcurve(400,150,350,400,200,500);
+
+  }
+
+  function drawcurve(x1,y1,x2,y2,x3,y3)
+  {
+    ctx.beginPath();
+
+    ctx.moveTo(x1,y1);
+    ctx.lineTo(x2,y2);
+
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x3,y3);
+
+    ctx.stroke();
+
+    steps=20;
+
+    var pxa1=(x2-x1)/steps;
+    var pya1=(y2-y1)/steps;
+    var pxa2=(x3-x2)/steps;
+    var pya2=(y3-y2)/steps;
+
+    var p5x=x1;
+    var p5y=y1;
+
+    var p6x=x2;
+    var p6y=y2;
+
+    var p7x,p7y;
+
+    stz=1.0/steps;
+
+    var lf=0.0;
+    var hf=1.0;
+
+    var lx=x1;
+    var ly=y1;
+
+    ctx.beginPath();
+    ctx.moveTo(x1,y1);
+
+    for(var i=0;i<steps;i++){ 
+      lf += stz;
+      hf-=stz;
+
+      p7x=(p6x*lf)+(p5x*hf);
+      p7y=(p6y*lf)+(p5y*hf);
+
+      p5x+=pxa1;
+      p5y+=pya1;
+
+      p6x+=pxa2;
+      p6y+=pya2;
+
+      lx=p7x;
+      ly=p7y;
+      
+      console.log((+(p7x.toFixed(3))) + ' - ' + (+(p7y.toFixed(3))));
+      ctx.lineTo(p7x,p7y);
+    }
+
+    ctx.stroke();
+  }
+
+</script>
+
+</head>
+<body onload="initcanvas()">
+
+<canvas id="myCanvas" width="600" height="600" style="border:1px solid green;" ></canvas>
+
+</body>
+</html>

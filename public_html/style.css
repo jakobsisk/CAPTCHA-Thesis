@@ -1,0 +1,249 @@
+
+
+/* ------------ CSS RESET ---------------
+
+http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+/* Reset of Placeholder text behaviour */
+:focus::-webkit-input-placeholder { 
+  color: transparent; 
+}
+:focus::-moz-placeholder { /* Firefox 19+ */
+  color: transparent; 
+} 
+:focus:-moz-placeholder { /* Firefox 18 */
+  color: transparent; 
+} 
+/* Color of Placeholder text */
+::-webkit-input-placeholder { 
+  color: rgba(0,0,0,0.38); 
+}
+::-moz-placeholder { /* Firefox 19+ */
+  color: rgba(0,0,0,0.38); opacity: 1; 
+} 
+:-moz-placeholder { /* Firefox 18 */
+  color: rgba(0,0,0,0.38); opacity: 1; 
+} 
+:-ms-input-placeholder { 
+  color: rgba(0,0,0,0.38); 
+}
+::placeholder { 
+  color: rgba(0,0,0,0.38); 
+}
+
+input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0px 1000px white inset;
+}
+
+/* ------------ /CSS RESET ------------- */
+
+/* ------------------------------------- */
+
+body {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+header {
+  float: left;
+  width: 100%;
+}
+
+h1 {
+  padding: 15px 25px;
+  width: 100%; 
+
+  background-color: #3E50B4;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.54);
+  color: white;
+  font-size: 56px;
+  font-weight: 400;
+  line-height: 64px;
+}
+h2 {
+  clear: both;
+  float: left;
+  margin: 10px 25px 0 25px; 
+  
+  color: rgba(0,0,0,0.54);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 53px;
+}
+h3 {
+  clear: both;
+  display: block;
+  float: left;
+  margin: 0 25px;
+
+  border-bottom: 1px solid rgba(0,0,0,0.12);
+  color: rgba(0,0,0,0.54);
+  font-size: 23px;
+  font-weight: 400;
+  line-height: 41px;
+}
+h3:hover {
+  cursor: pointer;
+}
+nav {
+  clear: both;
+  float: left;
+  height: 0;
+  margin: 0 25px;
+  overflow: hidden;
+  transition: height 200ms ease-out;
+}
+nav > ul > li {
+  clear: both;
+  float: left;
+  height: 32px;
+  padding: 16px 0;
+
+  color: rgba(0,0,0,0.54);
+  font-size: 16px;
+}
+nav > ul > li:hover {
+  cursor: pointer;
+}
+
+form {
+  clear: both;
+  float: left;
+  margin: 25px;
+}
+.form_item {
+  clear: both;
+  float: left;
+  height: 72px;
+  padding: 16px 0 8px 0;
+  width: 100%;
+}
+label:not(.radio_option_label) {
+  clear: both;
+  float: left;
+  padding: 0 0 8px 0;
+
+  color: rgba(0,0,0, 0.38);
+  font-size: 12px;
+}
+input:not([type=radio]) {
+  clear: both;
+  float: left;
+  padding: 0 0 7px 0;
+  width: 100%;
+
+  border: none; /* Reset border */
+  border-bottom: 1px solid rgba(0,0,0,0.12);
+  color: rgba(0,0,0,0.87);
+  font-size: 16px;
+}
+input:not([type=radio]):focus {
+  padding: 0 0 6px 0;
+
+  border-bottom: 2px solid #3E50B4;
+  color: rgba(0,0,0,0.87);
+  outline: none;
+}
+.radio_options_wrapper {
+  clear: both;
+  float: left;
+  padding: 0 0 7px 0;
+  width: 100%;
+
+  border-bottom: 1px solid rgba(0,0,0,0.12);
+}
+label.radio_option_label {
+  float: left;
+  margin: 0 8px;
+
+  color: rgba(0,0,0,0.87);
+  font-size: 16px;
+}
+input[type="radio"] {
+  float: left;
+  height: 14px;
+  margin: 0;
+  width: 14px;
+}
+#input_submit {
+  clear: both;
+  float: right;
+  margin: 10px 0;
+  padding: 0 0 7px 0;
+
+  background-color: white;
+  border: none; /* Reset border */
+  border-bottom: 1px solid rgba(0,0,0,0.12);
+  color: rgba(0,0,0,0.87);
+  font-size: 16px;
+  text-align: right;
+}
+#input_submit:hover {
+  padding: 0 0 6px 0;
+
+  border-bottom: 2px solid #3E50B4;
+  cursor: pointer;
+}
+
+section {
+  clear: both;
+  display: block;
+  float: left;
+  margin: 0 25px;
+
+  color: rgba(0,0,0,0.54);
+  font-size: 16px;
+  line-height: 24px;
+}
